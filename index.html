@@ -1,0 +1,3014 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#041e42">
+<meta name="description" content="Plan multi-game NHL road trips with friends across the country. Interactive arena map, subsequence route solver, transit/drive estimates, and group-chat poll export.">
+<title>NHL Friends Road Trip Planner Pro</title>
+<style>
+:root {
+  --navy: #041e42;
+  --navy-mid: #0c2b59;
+  --navy-light: #1a3f75;
+  --red: #c8102e;
+  --red-dark: #a30b24;
+  --ink: #0f2137;
+  --muted: #5b6d82;
+  --line: #d8e2ed;
+  --ice: #f1f5f9;
+  --ice-soft: #f8fafc;
+  --green: #0d7a5f;
+  --amber: #b45309;
+  --purple: #6d28d9;
+  --white: #ffffff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ice);
+  color: var(--ink);
+  font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+button, input, select, textarea { font: inherit; }
+button, select, input[type=checkbox], input[type=range] { cursor: pointer; }
+button { transition: background .16s, transform .16s, border-color .16s, box-shadow .16s; }
+button:disabled { cursor: default; opacity: .5; }
+button:hover:not(:disabled) { transform: translateY(-1px); }
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 3px solid #338fff;
+  outline-offset: 3px;
+}
+a { color: var(--navy); }
+
+
+/* Header */
+header {
+  background: linear-gradient(135deg, #03152e 0%, #041e42 60%, #0a2d5e 100%);
+  color: white;
+  border-bottom: 3px solid var(--red);
+}
+.topbar {
+  max-width: 1380px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 32px;
+  gap: 16px;
+}
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-weight: 850;
+  letter-spacing: .02em;
+}
+.brand-icon {
+  width: 38px;
+  height: 40px;
+  background: rgba(255,255,255,.08);
+  border: 2px solid rgba(255,255,255,.7);
+  border-radius: 6px 6px 15px 15px;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+}
+.brand small {
+  display: block;
+  font-size: 10px;
+  color: #b7c7db;
+  letter-spacing: .18em;
+  font-weight: 700;
+}
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topnote {
+  font-size: 12px;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.topnote .dot-live {
+  width: 8px;
+  height: 8px;
+  background: #34d399;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(52,211,153,.22);
+}
+.btn-top {
+  background: rgba(255,255,255,.12);
+  color: white;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 7px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.btn-top:hover { background: rgba(255,255,255,.2); }
+
+
+/* Main Container */
+main {
+  max-width: 1380px;
+  margin: auto;
+  padding: 28px 32px 56px;
+}
+
+
+/* Hero Banner */
+.intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--red);
+  margin: 0 0 6px;
+}
+h1 {
+  font-size: clamp(26px, 3.2vw, 38px);
+  line-height: 1.14;
+  letter-spacing: -.035em;
+  margin: 0 0 8px;
+  color: var(--navy);
+}
+.lead {
+  margin: 0;
+  color: var(--muted);
+  max-width: 660px;
+  font-size: 14.5px;
+}
+.preset-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 12px;
+}
+.preset-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.preset-chip {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 650;
+}
+.preset-chip:hover {
+  border-color: var(--navy);
+  background: #edf3fb;
+}
+
+
+/* Main Grid Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 385px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.panel, .trip, .map-card, .compare-drawer {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(4, 30, 66, .035);
+}
+.panel {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+h2 {
+  font-size: 16.5px;
+  letter-spacing: -.02em;
+  margin: 0;
+  color: var(--navy);
+}
+.step {
+  display: grid;
+  place-items: center;
+  color: var(--red);
+  background: #fbecef;
+  border-radius: 6px;
+  height: 25px;
+  width: 25px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.counter {
+  margin-left: auto;
+  font-size: 11px;
+  background: var(--ice);
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-weight: 700;
+}
+
+
+/* Team Filter & Search */
+.team-search-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.team-search {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--ice-soft);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 11px;
+}
+.tab {
+  border: 0;
+  background: var(--ice);
+  color: var(--muted);
+  border-radius: 5px;
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 650;
+}
+.tab[aria-pressed=true] {
+  background: var(--navy);
+  color: #fff;
+}
+.team-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-height: 330px;
+  overflow: auto;
+  padding: 3px;
+}
+.team {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  text-align: left;
+  gap: 8px;
+  position: relative;
+  min-height: 54px;
+}
+.team:hover {
+  border-color: #8b9cb4;
+  background: #fafcff;
+}
+.team[aria-pressed=true] {
+  border-color: var(--navy);
+  background: #edf3fb;
+  box-shadow: inset 0 0 0 1px var(--navy);
+}
+.crest {
+  background: var(--team-color, var(--navy));
+  color: white;
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  flex: none;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: -.02em;
+}
+.team-name {
+  display: block;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+.team-city {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 2px;
+}
+.selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 12px;
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  min-height: 42px;
+  align-items: center;
+}
+.pill {
+  border: 0;
+  background: var(--navy);
+  color: white;
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pill span { color: #cbd5e1; }
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+
+/* Form Controls */
+.field { margin-bottom: 15px; }
+.field > label, .labelrow {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.labelrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.distance-number {
+  color: var(--red);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+select, input[type=date], input[type=url], textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fbfcfe;
+  border-radius: 7px;
+  padding: 9px 10px;
+  color: var(--ink);
+  font-size: 12.5px;
+}
+input[type=range] {
+  width: 100%;
+  accent-color: var(--red);
+  margin: 4px 0;
+}
+.range-ends {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 10px;
+}
+.checkline {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 650;
+  margin-bottom: 10px;
+}
+.checkline input {
+  accent-color: var(--navy);
+  margin-top: 3px;
+  flex: none;
+}
+.checkline small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+.primary {
+  width: 100%;
+  background: var(--red);
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  padding: 11px;
+  font-weight: 750;
+  margin-top: 4px;
+}
+.primary:hover { background: var(--red-dark); }
+.btn {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 7px;
+  padding: 7px 11px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--navy);
+}
+.btn:hover {
+  border-color: #92a3b8;
+  background: var(--ice);
+}
+.btn.active-pin {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+
+/* Interactive Map Card */
+.map-card {
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+.map-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: var(--ice-soft);
+}
+.map-title-group h3 {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--navy);
+}
+.map-title-group p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.map-regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.region-btn {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--muted);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 10.5px;
+  font-weight: 650;
+}
+.region-btn[aria-pressed=true] {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+.map-canvas-wrap {
+  position: relative;
+  background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 100%);
+  height: 295px;
+  overflow: hidden;
+}
+.arena-map {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.map-legend {
+  padding: 9px 18px;
+  background: white;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.legend-items {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+
+/* Compare Drawer */
+.compare-drawer {
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+.compare-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.compare-head h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #92400e;
+}
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+.compare-col {
+  background: white;
+  border: 1px solid #fcd34d;
+  border-radius: 9px;
+  padding: 11px;
+  font-size: 11.5px;
+}
+.compare-col h4 {
+  margin: 0 0 6px;
+  color: var(--navy);
+  font-size: 13px;
+}
+.compare-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px dashed #f1f5f9;
+}
+
+
+/* Metrics & Results */
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 12px;
+  flex-wrap: wrap;
+}
+.results-header h2 { font-size: 20px; }
+.results-header p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 3px 0 0;
+}
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sort-bar label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.sort-bar select {
+  width: auto;
+  padding: 6px 9px;
+  font-size: 11.5px;
+}
+.data-banner {
+  border: 1px solid #d8e4f0;
+  border-radius: 8px;
+  background: #eaf1f9;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 11px;
+  color: #49617e;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.data-banner strong { color: var(--navy); }
+
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 11px;
+  margin-bottom: 16px;
+}
+.metric {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 14px;
+  background: white;
+}
+.metric strong {
+  display: block;
+  font-size: 22px;
+  color: var(--navy);
+  letter-spacing: -.03em;
+  line-height: 1.2;
+}
+.metric span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+
+/* Trip Cards */
+.trip {
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: border-color .16s, box-shadow .16s;
+}
+.trip.active-map {
+  border-color: var(--navy);
+  box-shadow: 0 6px 20px rgba(4, 30, 66, .1);
+}
+.best-label {
+  background: linear-gradient(90deg, var(--navy) 0%, var(--navy-light) 100%);
+  color: white;
+  padding: 6px 20px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .12em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.trip-head {
+  padding: 18px 20px 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.trip-title {
+  font-size: 18px;
+  letter-spacing: -.02em;
+  margin: 0 0 4px;
+  color: var(--navy);
+}
+.trip-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.rank-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.rank {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--ice);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-weight: 700;
+}
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 20px 13px;
+}
+.badge {
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 10.5px;
+  font-weight: 650;
+  background: #edf3fb;
+  color: #385882;
+}
+.badge.green { background: #e8f5ef; color: var(--green); }
+.badge.red { background: #fbedf0; color: #a8233a; }
+.badge.amber { background: #fef3c7; color: var(--amber); }
+.badge.purple { background: #f3e8ff; color: var(--purple); }
+
+
+.route {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 20px;
+  background: #f8fafd;
+  border-block: 1px solid #e7edf4;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.route-chain {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.route-stop {
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--navy);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+.route-leg {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.airport-hint {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+
+.table-wrap { overflow: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 580px;
+}
+th {
+  font-size: 9.5px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 11px 20px 7px;
+  background: #fcfdfe;
+}
+td {
+  padding: 11px 20px;
+  border-bottom: 1px solid #edf1f6;
+  font-size: 12px;
+  vertical-align: top;
+}
+td small {
+  display: block;
+  color: var(--muted);
+  font-size: 10.5px;
+  margin-top: 2px;
+}
+.matchup {
+  font-weight: 750;
+  white-space: nowrap;
+}
+.matchup .selected-team {
+  color: var(--red);
+  text-decoration: underline;
+  text-decoration-color: rgba(200,16,46,.35);
+  text-underline-offset: 2px;
+}
+.h2h-pill {
+  display: inline-block;
+  margin-left: 6px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 9.5px;
+  font-weight: 750;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.mile {
+  text-align: right;
+  white-space: nowrap;
+}
+td.mile strong { font-variant-numeric: tabular-nums; }
+
+
+.trip-footer {
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #fcfdfe;
+}
+.trip-footer p {
+  font-size: 10.5px;
+  color: var(--muted);
+  margin: 0;
+}
+.trip-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+  background: white;
+  border: 1px dashed #bdcad9;
+  border-radius: 12px;
+}
+.empty h3 { color: var(--navy); margin: 10px 0; }
+.empty p { color: var(--muted); max-width: 460px; margin: 0 auto; font-size: 13px; }
+.empty-icon { font-size: 28px; }
+.more { display: block; margin: 20px auto; }
+
+
+.tools { padding: 0; }
+.tools summary {
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--navy);
+}
+.tool-content { padding: 0 20px 18px; }
+.tool-content p { font-size: 11px; color: var(--muted); margin: 6px 0; }
+.tool-content .btn { margin-top: 6px; }
+.tool-content input { font-size: 12px; margin: 5px 0; }
+.tool-content label { display: block; font-size: 11px; font-weight: 700; margin-top: 10px; }
+.tool-content code { font-size: 10px; overflow-wrap: anywhere; }
+
+
+footer {
+  margin-top: 32px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  background: var(--navy);
+  color: white;
+  padding: 11px 18px;
+  box-shadow: 0 6px 28px rgba(4, 30, 66, .28);
+  border-radius: 9px;
+  max-width: calc(100% - 30px);
+  font-size: 12px;
+  font-weight: 600;
+}
+.toast[hidden] { display: none; }
+.sr-only {
+  position: absolute;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+dialog {
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  width: min(580px, 95vw);
+  padding: 22px;
+  color: var(--ink);
+}
+dialog::backdrop { background: rgba(4, 30, 66, .5); }
+dialog h2 { margin-bottom: 10px; }
+dialog textarea { height: 260px; font-size: 12px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+dialog .btn { margin-top: 10px; }
+.explanation { font-size: 11px; color: var(--muted); margin: 12px 0 0; }
+.dot { padding: 0 4px; }
+
+
+@media (min-width: 1060px) {
+  aside { position: sticky; top: 16px; }
+}
+@media (max-width: 1020px) {
+  .layout { grid-template-columns: 330px minmax(0, 1fr); }
+  main { padding: 22px 18px; }
+  .topbar { padding: 14px 18px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .topnote { display: none; }
+  .metrics { grid-template-columns: 1fr 1fr; }
+  footer { flex-direction: column; gap: 6px; }
+}
+
+/* Multi-Sport & Pro/College Expansion Bar */
+.sport-arch-bar {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(4, 30, 66, .03);
+}
+.sport-arch-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sport-arch-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--navy);
+  margin-right: 4px;
+}
+.sport-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+  margin: 0 4px;
+}
+.league-pill {
+  border: 1px solid var(--line);
+  background: var(--ice-soft);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.league-pill[aria-pressed="true"] {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+.league-pill.expansion {
+  color: var(--muted);
+  border-style: dashed;
+  background: #fcfdfe;
+}
+.league-pill.expansion:hover {
+  border-color: var(--navy);
+  color: var(--navy);
+  background: #edf3fb;
+}
+.league-tag-soon {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.btn-arch-info {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: var(--navy);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.btn-arch-info:hover {
+  background: #edf3fb;
+  border-color: var(--navy);
+}
+
+/* Shared Link Banner */
+.shared-banner {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  color: #065f46;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.shared-banner[hidden] { display: none; }
+
+/* Header Share Toolbar Enhancements */
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn-top.highlight {
+  background: var(--red);
+  border-color: #ff4d6a;
+}
+.btn-top.highlight:hover {
+  background: var(--red-dark);
+}
+.btn.share-accent {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+.btn.share-accent:hover {
+  background: #dbeafe;
+}
+
+/* Modal Step Cards */
+.guide-steps {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+  max-height: 58vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.guide-step {
+  background: var(--ice-soft);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+}
+.guide-step strong {
+  color: var(--navy);
+  display: block;
+  margin-bottom: 3px;
+}
+.url-config-box {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 9px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.url-config-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.share-action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+.btn-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.btn-action-link:hover {
+  background: #edf3fb;
+  border-color: var(--navy);
+}
+.btn-action-link.primary-link {
+  background: var(--navy);
+  color: white;
+  border-color: var(--navy);
+}
+.btn-action-link.primary-link:hover {
+  background: var(--navy-light);
+}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">🏒</div>
+      <div>NHL FRIENDS<small>ROAD TRIP PLANNER PRO</small></div>
+    </div>
+    <div class="top-actions">
+      <div class="topnote"><span class="dot-live"></span>32 arenas · 1,344 official 2026–27 NHL games · Multi-sport ready</div>
+      <button type="button" class="btn-top highlight" id="share-link-btn" title="Copy a direct link to your current teams, filters, and pinned trips">🔗 Share Trip Link</button>
+      <button type="button" class="btn-top" id="share-sms-btn" title="Send your road trip shortlist via text message (SMS / iMessage)">💬 Text / SMS</button>
+      <button type="button" class="btn-top" id="share-email-btn" title="Email your road trip shortlist and interactive link to a coworker or friend">✉️ Email</button>
+      <button type="button" class="btn-top" id="poll-export-btn">🗳️ Copy Group Chat Poll</button>
+      <button type="button" class="btn-top" id="github-guide-btn" title="How to host on GitHub Pages &amp; configure your live share URL">🚀 GitHub Pages Setup</button>
+    </div>
+  </div>
+</header>
+
+
+<main>
+  <div id="shared-state-banner" class="shared-banner" role="status" hidden>
+    <span id="shared-state-msg">🔗 Loaded shared road trip configuration from link!</span>
+    <div style="display:flex;gap:6px">
+      <button type="button" class="btn" id="copy-current-link-banner">🔗 Copy Link</button>
+      <button type="button" class="btn" id="dismiss-shared-banner">Dismiss</button>
+    </div>
+  </div>
+
+  <section class="sport-arch-bar" aria-label="Sport and League Selector">
+    <div class="sport-arch-group" id="league-selector-bar">
+      <span class="sport-arch-label">🏟️ Leagues:</span>
+      <button type="button" class="league-pill" data-league-select="NHL" aria-pressed="true">🏒 NHL <span style="font-weight:500;opacity:.85">(Pro · Active)</span></button>
+      <span class="sport-divider" aria-hidden="true"></span>
+      <span style="font-size:10.5px;font-weight:700;color:var(--muted)">Pro Expansion:</span>
+      <button type="button" class="league-pill expansion" data-league-select="NFL" aria-pressed="false">🏈 NFL <span class="league-tag-soon">Slot</span></button>
+      <button type="button" class="league-pill expansion" data-league-select="NBA" aria-pressed="false">🏀 NBA <span class="league-tag-soon">Slot</span></button>
+      <button type="button" class="league-pill expansion" data-league-select="MLB" aria-pressed="false">⚾ MLB <span class="league-tag-soon">Slot</span></button>
+      <button type="button" class="league-pill expansion" data-league-select="MLS" aria-pressed="false">⚽ MLS <span class="league-tag-soon">Slot</span></button>
+      <span class="sport-divider" aria-hidden="true"></span>
+      <span style="font-size:10.5px;font-weight:700;color:var(--muted)">College (NCAA):</span>
+      <button type="button" class="league-pill expansion" data-league-select="NCAAF" aria-pressed="false">🎓🏈 NCAA FB <span class="league-tag-soon">Slot</span></button>
+      <button type="button" class="league-pill expansion" data-league-select="NCAAB" aria-pressed="false">🎓🏀 NCAA BB <span class="league-tag-soon">Slot</span></button>
+      <button type="button" class="league-pill expansion" data-league-select="NCAAH" aria-pressed="false">🎓🏒 NCAA Hockey <span class="league-tag-soon">Slot</span></button>
+    </div>
+    <button type="button" class="btn-arch-info" id="multisport-arch-btn">🔀 Multi-Sport &amp; Pro/College Crossover Specs</button>
+  </section>
+
+  <section class="intro">
+    <div>
+      <p class="eyebrow">Different cities. Different teams. One epic hockey stretch.</p>
+      <h1>Plan the ultimate multi-game NHL getaway with your crew.</h1>
+      <p class="lead">Select up to 3 favorite teams, set your travel radius, and let the subsequence route solver find tight 3–5 day stretches with real puck-drop times, Amtrak/drive estimates, and head-to-head bonuses.</p>
+      <div class="preset-bar" aria-label="Quick team presets">
+        <span class="preset-label">Quick Crew Presets:</span>
+        <button type="button" class="preset-chip" data-preset="NYR,NJD,PHI">🚇 Amtrak Corridor (NYR + NJD + PHI)</button>
+        <button type="button" class="preset-chip" data-preset="BOS,NYR,MTL">🍁 Original Six East (BOS + NYR + MTL)</button>
+        <button type="button" class="preset-chip" data-preset="CHI,DET,STL">🌊 Midwest Swing (CHI + DET + STL)</button>
+        <button type="button" class="preset-chip" data-preset="LAK,ANA,VGK">🌴 SoCal + Vegas (LAK + ANA + VGK)</button>
+        <button type="button" class="preset-chip" data-preset="SEA,VAN,CGY">🏔️ Cascadia + Rockies (SEA + VAN + CGY)</button>
+      </div>
+    </div>
+  </section>
+
+
+  <div class="layout">
+    <aside>
+      <!-- STEP 1 -->
+      <section class="panel" aria-labelledby="teams-heading">
+        <div class="section-head">
+          <span class="step">01</span>
+          <h2 id="teams-heading">Choose your crew’s teams</h2>
+          <span class="counter" id="team-counter">0 / 3</span>
+          <button type="button" class="btn" id="clear-teams-btn" style="padding:3px 8px;font-size:10.5px">Clear all</button>
+        </div>
+        <div id="selected-teams" class="selected" style="margin:0 0 10px;padding:0 0 10px;border-top:0;border-bottom:1px solid var(--line)" aria-label="Selected teams"></div>
+        <div class="team-search-row">
+          <input type="search" id="team-search" class="team-search" placeholder="Filter by team, city, or arena…" aria-label="Filter teams">
+        </div>
+        <div id="division-tabs" class="tabs" aria-label="Filter teams by division"></div>
+        <div id="team-grid" class="team-grid"></div>
+        <p class="hint">Click any team to add or swap. When 3 teams are selected, clicking a 4th automatically replaces your oldest pick.</p>
+      </section>
+
+
+      <!-- STEP 2 -->
+      <section class="panel" aria-labelledby="trip-heading">
+        <div class="section-head">
+          <span class="step">02</span>
+          <h2 id="trip-heading">Trip window &amp; travel limits</h2>
+        </div>
+        <form id="trip-form">
+          <div class="field">
+            <label for="window">Trip window length</label>
+            <select id="window">
+              <option value="2,3">2–3 days · Quick Back-to-Back</option>
+              <option value="3,4">3–4 days · Long Weekend</option>
+              <option value="3,5" selected>3–5 days · Standard Road Trip</option>
+              <option value="4,6">4–6 days · Extended Tour</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="labelrow">
+              <label for="distance">Max travel distance per leg</label>
+              <output class="distance-number" id="distance-value" for="distance">350 mi</output>
+            </div>
+            <input id="distance" type="range" min="30" max="600" step="10" value="350">
+            <div class="range-ends"><span>30 mi (Metro)</span><span>350 mi (~5h drive)</span><span>600 mi</span></div>
+          </div>
+          <div class="field">
+            <label for="month">Target month</label>
+            <select id="month"><option value="all">Full season (Oct – Apr)</option></select>
+          </div>
+          <div class="field">
+            <label for="origin">Optional: Crew meeting hub / home region</label>
+            <select id="origin">
+              <option value="any">Anywhere in North America (No bias)</option>
+              <option value="OMA">Central US (Omaha / KC / Midwest midpoint)</option>
+              <option value="NYC">Northeast (NYC / Newark / Boston / Philly)</option>
+              <option value="CHI">Great Lakes (Chicago / Detroit / Toronto)</option>
+              <option value="LAX">West Coast (LA / Vegas / Seattle)</option>
+            </select>
+          </div>
+          <label class="checkline">
+            <input type="checkbox" id="coverage" checked>
+            <span id="coverage-text">Must include all selected teams<small>Every friend sees their team at least once.</small></span>
+          </label>
+          <label class="checkline">
+            <input type="checkbox" id="dedupe" checked>
+            <span>Hide dominated sub-trips<small>Skip 2-game subsets when a 3- or 4-game trip covers the exact same window.</small></span>
+          </label>
+          <label class="checkline">
+            <input type="checkbox" id="weekend-only">
+            <span>Weekend-heavy trips only<small>Require at least half the games to fall on Fri/Sat/Sun.</small></span>
+          </label>
+          <button class="primary" type="submit" id="find-button">Find optimal road trips <span aria-hidden="true">→</span></button>
+        </form>
+      </section>
+
+
+      <!-- SCHEDULE TOOLS -->
+      <details class="panel tools">
+        <summary>Live NHL API &amp; Custom Schedule Tools <span aria-hidden="true">↗</span></summary>
+        <div class="tool-content">
+          <p>Pull live full-season schedules for your selected teams from the NHL web API, fetch a specific week, or import/export custom JSON.</p>
+          <button type="button" class="btn" id="fetch-club-season" style="width:100%">⚡ Fetch Live Season for Selected Teams</button>
+          <label for="live-date">Or fetch live NHL league week starting:</label>
+          <input type="date" id="live-date" value="2026-10-14">
+          <button type="button" class="btn" id="fetch-live">Fetch live week</button>
+          <a id="api-link" href="https://api-web.nhle.com/v1/schedule/2026-10-14" target="_blank" rel="noopener" style="font-size:11px;margin-left:8px">Open NHL API JSON ↗</a>
+          <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+          <label for="schedule-file">Import custom schedule JSON</label>
+          <input id="schedule-file" type="file" accept=".json,application/json">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn" id="download-data">Download JSON</button>
+            <button type="button" class="btn" id="reset-data">Restore 1,344-game 2026–27 NHL season</button>
+          </div>
+          <p id="data-status" role="status"></p>
+        </div>
+      </details>
+    </aside>
+
+
+    <!-- RIGHT COLUMN: INTERACTIVE MAP + COMPARE + RESULTS -->
+    <section aria-labelledby="results-title">
+      <!-- Interactive North America Arena & Route Map -->
+      <div class="map-card">
+        <div class="map-header">
+          <div class="map-title-group">
+            <h3 id="map-route-title">🗺️ Interactive NHL Arena &amp; Route Map</h3>
+            <p id="map-route-sub">Click any trip card below to plot its multi-city travel route and leg mileage.</p>
+          </div>
+          <div class="map-regions" role="group" aria-label="Map region zoom">
+            <button type="button" class="region-btn" data-region="AUTO" aria-pressed="true">🎯 Auto-Fit Trip</button>
+            <button type="button" class="region-btn" data-region="ALL" aria-pressed="false">Full Continent</button>
+            <button type="button" class="region-btn" data-region="NE" aria-pressed="false">Northeast</button>
+            <button type="button" class="region-btn" data-region="MW" aria-pressed="false">Midwest</button>
+            <button type="button" class="region-btn" data-region="WEST" aria-pressed="false">West / SoCal</button>
+            <button type="button" class="region-btn" data-region="NW" aria-pressed="false">PNW / Alberta</button>
+          </div>
+        </div>
+        <div class="map-canvas-wrap">
+          <svg id="arena-map" class="arena-map" viewBox="0 0 860 320" preserveAspectRatio="xMidYMid meet" aria-label="Map of NHL arenas and active road trip route"></svg>
+        </div>
+        <div class="map-legend">
+          <div class="legend-items">
+            <span><i class="legend-dot" style="background:#c8102e"></i>Active Trip Stops (① → ② → ③)</span>
+            <span><i class="legend-dot" style="background:#041e42"></i>Selected Crew Home Arenas</span>
+            <span><i class="legend-dot" style="background:#94a3b8"></i>Other NHL Arenas</span>
+          </div>
+          <span id="map-flight-summary">Select a trip to see fly-in / fly-out hubs</span>
+        </div>
+      </div>
+
+
+      <!-- Pin & Compare Drawer (hidden until 1+ trips pinned) -->
+      <div class="compare-drawer" id="compare-drawer" hidden>
+        <div class="compare-head" style="flex-wrap:wrap;gap:8px">
+          <h3>📌 Pinned Trip Comparison (<span id="compare-count">0</span> / 3)</h3>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" class="btn share-accent" id="share-pinned-link">🔗 Copy Link to Pinned</button>
+            <button type="button" class="btn" id="sms-pinned-poll">💬 Text Pinned</button>
+            <button type="button" class="btn" id="email-pinned-poll">✉️ Email Pinned</button>
+            <button type="button" class="btn" id="copy-pinned-poll">🗳️ Copy Poll of Pinned Trips</button>
+            <button type="button" class="btn" id="clear-pins">Clear Pins</button>
+          </div>
+        </div>
+        <div class="compare-grid" id="compare-grid"></div>
+      </div>
+
+
+      <div class="results-header">
+        <div>
+          <h2 id="results-title">Your Road Trip Shortlist</h2>
+          <p id="results-description">Ranked by team coverage, head-to-head matchups, game density, and lowest travel time.</p>
+        </div>
+        <div class="sort-bar">
+          <label for="sort-select">Sort by:</label>
+          <select id="sort-select">
+            <option value="fit">★ Best Overall Fit</option>
+            <option value="miles">🚗 Lowest Total Miles</option>
+            <option value="games">🏒 Most Games in Window</option>
+            <option value="date">📅 Earliest Date</option>
+          </select>
+        </div>
+      </div>
+
+
+      <div class="data-banner">
+        <div><span aria-hidden="true">ⓘ</span> <span id="source-label"></span></div>
+      </div>
+
+
+      <div class="metrics">
+        <div class="metric"><strong id="trip-count">—</strong><span>matching road trips</span></div>
+        <div class="metric"><strong id="best-coverage">—</strong><span>crew teams in top trip</span></div>
+        <div class="metric"><strong id="best-distance">—</strong><span>top trip · inter-arena mi</span></div>
+        <div class="metric"><strong id="h2h-count">—</strong><span>trips w/ head-to-head game</span></div>
+      </div>
+
+
+      <div id="results" aria-live="polite" aria-busy="false"></div>
+      <button type="button" class="btn more" id="more-results" hidden>Show more road trips</button>
+      <p class="explanation">Subsequence solver evaluates every chronological combination of games (max 1 game/day) so out-of-the-way arenas are skipped automatically. Driving times estimate ~1.22× straight-line distance at highway speeds plus city transit corridors.</p>
+    </section>
+  </div>
+
+
+  <footer>
+    <span>NHL Friends Road Trip Planner Pro · Built for hockey crews across North America.</span>
+    <span>Click any trip card to visualize its route on the map, pin contenders, or download an .ics calendar invite.</span>
+  </footer>
+</main>
+
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+
+<dialog id="copy-dialog">
+  <h2 id="dialog-title">Share &amp; Export Road Trip</h2>
+  <p class="hint" id="dialog-hint">Send directly via Email or Text/SMS, or copy the text and shareable link below for iMessage, Slack, Teams, or WhatsApp.</p>
+  <div class="share-action-grid" id="dialog-direct-actions">
+    <a id="dialog-mailto-link" class="btn-action-link primary-link" href="#copy-dialog">✉️ Open in Default Email App</a>
+    <a id="dialog-gmail-link" class="btn-action-link" href="https://mail.google.com/" target="_blank" rel="noopener">📬 Open in Gmail Web ↗</a>
+    <a id="dialog-sms-link" class="btn-action-link" href="#copy-dialog">💬 Open in Text / SMS App</a>
+    <button type="button" class="btn" id="dialog-copy-btn" style="margin:0">📋 Copy Text &amp; Link</button>
+  </div>
+  <textarea id="copy-text" readonly aria-label="Text to copy"></textarea>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
+    <span class="hint" style="margin:0" id="dialog-url-preview">Includes live URL state hash (#teams=...)</span>
+    <button type="button" class="btn" id="close-dialog" style="margin:0">Done</button>
+  </div>
+</dialog>
+
+<dialog id="github-dialog">
+  <h2>🚀 Host for Free on GitHub Pages (Step-by-Step)</h2>
+  <p class="hint">GitHub Pages turns your single <code>index.html</code> file into a permanent, mobile-friendly <code>https://</code> link you can text or email to any coworker without firewall blocks.</p>
+  <div class="url-config-box">
+    <label for="live-base-url" style="font-size:12px;font-weight:750;color:var(--navy);display:block">Optional: Your Published GitHub Pages URL</label>
+    <p class="hint" style="margin:2px 0 6px">Once your GitHub Pages site is live, paste its URL here (or open the app directly from that URL) so every shared link uses your live address automatically:</p>
+    <div class="url-config-row">
+      <input type="url" id="live-base-url" placeholder="https://your-username.github.io/nhl-trip-planner/">
+      <button type="button" class="btn share-accent" id="save-base-url-btn" style="margin:0;white-space:nowrap">Save URL</button>
+    </div>
+  </div>
+  <div class="guide-steps">
+    <div class="guide-step">
+      <strong>Step 1: Create a free GitHub account &amp; New Repository</strong>
+      Sign in at <a href="https://github.com/new" target="_blank" rel="noopener">github.com/new ↗</a>. Set the Repository Name to <code>nhl-trip-planner</code> (or <code>sports-trip-planner</code>), choose <strong>Public</strong>, check <strong>Add a README file</strong>, and click <strong>Create repository</strong>.
+    </div>
+    <div class="guide-step">
+      <strong>Step 2: Upload your <code>index.html</code> file</strong>
+      Inside your new repository, click <strong>Add file → Upload files</strong>. Drag and drop your downloaded <code>index.html</code> file (from the zip package), then click the green <strong>Commit changes</strong> button at the bottom.
+    </div>
+    <div class="guide-step">
+      <strong>Step 3: Turn on GitHub Pages</strong>
+      Click the <strong>Settings</strong> tab at the top of your repository, then click <strong>Pages</strong> in the left sidebar (<a href="https://docs.github.com/pages/quickstart" target="_blank" rel="noopener">GitHub Pages Quickstart ↗</a>). Under <strong>Build and deployment → Branch</strong>, change <code>None</code> to <code>main</code> (and folder <code>/ (root)</code>), then click <strong>Save</strong>.
+    </div>
+    <div class="guide-step">
+      <strong>Step 4: Text or Email your live link!</strong>
+      Wait ~60 seconds and refresh the Pages settings screen. Your live link will appear as <code>https://&lt;your-username&gt;.github.io/nhl-trip-planner/</code>. Anytime you click <strong>🔗 Share Trip Link</strong>, <strong>💬 Text / SMS</strong>, or <strong>✉️ Email</strong> in this app, your selected teams, travel radius, and pinned trips are embedded right into the link!
+    </div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+    <button type="button" class="btn" id="close-github-dialog" style="margin:0">Close Guide</button>
+  </div>
+</dialog>
+
+<dialog id="multisport-dialog">
+  <h2>🔀 Multi-Sport &amp; Pro/College Crossover Architecture</h2>
+  <p class="hint">Built for NHL road trips today, with a normalized multi-league engine ready for Pro + NCAA crossover itineraries.</p>
+  <div class="guide-steps">
+    <div class="guide-step">
+      <strong>1. Unified Multi-League Data Schema (<code>league</code> + <code>level</code>)</strong>
+      Every team, venue, and schedule row in the engine carries <code>league</code> (<code>NHL</code>, <code>NFL</code>, <code>NBA</code>, <code>MLB</code>, <code>MLS</code>, <code>NCAAF</code>, <code>NCAAB</code>, <code>NCAAH</code>) and <code>level</code> (<code>PRO</code> vs. <code>COLLEGE</code>) metadata alongside latitude/longitude and nearest airport hubs.
+    </div>
+    <div class="guide-step">
+      <strong>2. Cross-Sport &amp; College/Pro Subsequence Solver</strong>
+      Because the dynamic-programming route solver operates on geographic coordinates (<code>lat</code>, <code>lon</code>) and date windows rather than single-league rules, you can select a mix of teams across leagues (e.g., Saturday afternoon Big Ten / SEC college football + Saturday night or Sunday NHL game within driving distance).
+    </div>
+    <div class="guide-step">
+      <strong>3. Plug-and-Play Custom Multi-Sport JSON Import</strong>
+      Want to test a mixed-sport schedule right now? Click below to copy a sample Multi-Sport (NHL + NFL + NCAA) JSON template, or import any custom schedule via the <strong>Live NHL API &amp; Custom Schedule Tools</strong> panel on the left.
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <button type="button" class="btn share-accent" id="copy-multisport-template-btn" style="margin:0">📋 Copy Multi-Sport JSON Schema Template</button>
+    <button type="button" class="btn" id="close-multisport-dialog" style="margin:0">Done</button>
+  </div>
+</dialog>
+
+
+<script>
+'use strict';
+
+
+const TEAMS = [
+  {abbr:'BOS',name:'Boston Bruins',city:'Boston, MA',arena:'TD Garden',airport:'BOS',tz:'ET',division:'Atlantic',lat:42.3662,lon:-71.0621,color:'#8a6400'},
+  {abbr:'BUF',name:'Buffalo Sabres',city:'Buffalo, NY',arena:'KeyBank Center',airport:'BUF',tz:'ET',division:'Atlantic',lat:42.8750,lon:-78.8764,color:'#003087'},
+  {abbr:'DET',name:'Detroit Red Wings',city:'Detroit, MI',arena:'Little Caesars Arena',airport:'DTW',tz:'ET',division:'Atlantic',lat:42.3411,lon:-83.0550,color:'#ce1126'},
+  {abbr:'FLA',name:'Florida Panthers',city:'Sunrise, FL',arena:'Amerant Bank Arena',airport:'FLL',tz:'ET',division:'Atlantic',lat:26.1583,lon:-80.3256,color:'#b9975b'},
+  {abbr:'MTL',name:'Montréal Canadiens',city:'Montréal, QC',arena:'Bell Centre',airport:'YUL',tz:'ET',division:'Atlantic',lat:45.4961,lon:-73.5694,color:'#af1e2d'},
+  {abbr:'OTT',name:'Ottawa Senators',city:'Ottawa, ON',arena:'Canadian Tire Centre',airport:'YOW',tz:'ET',division:'Atlantic',lat:45.2969,lon:-75.9272,color:'#b00020'},
+  {abbr:'TBL',name:'Tampa Bay Lightning',city:'Tampa, FL',arena:'Amalie Arena',airport:'TPA',tz:'ET',division:'Atlantic',lat:27.9428,lon:-82.4519,color:'#002868'},
+  {abbr:'TOR',name:'Toronto Maple Leafs',city:'Toronto, ON',arena:'Scotiabank Arena',airport:'YYZ',tz:'ET',division:'Atlantic',lat:43.6433,lon:-79.3792,color:'#00205b'},
+  {abbr:'CAR',name:'Carolina Hurricanes',city:'Raleigh, NC',arena:'Lenovo Center',airport:'RDU',tz:'ET',division:'Metropolitan',lat:35.8033,lon:-78.7219,color:'#ce1126'},
+  {abbr:'CBJ',name:'Columbus Blue Jackets',city:'Columbus, OH',arena:'Nationwide Arena',airport:'CMH',tz:'ET',division:'Metropolitan',lat:39.9693,lon:-83.0061,color:'#002654'},
+  {abbr:'NJD',name:'New Jersey Devils',city:'Newark, NJ',arena:'Prudential Center',airport:'EWR',tz:'ET',division:'Metropolitan',lat:40.7336,lon:-74.1711,color:'#ce1126'},
+  {abbr:'NYI',name:'New York Islanders',city:'Elmont, NY',arena:'UBS Arena',airport:'JFK/LGA',tz:'ET',division:'Metropolitan',lat:40.7117,lon:-73.7258,color:'#00539b'},
+  {abbr:'NYR',name:'New York Rangers',city:'New York, NY',arena:'Madison Square Garden',airport:'LGA/JFK',tz:'ET',division:'Metropolitan',lat:40.7506,lon:-73.9936,color:'#0038a8'},
+  {abbr:'PHI',name:'Philadelphia Flyers',city:'Philadelphia, PA',arena:'Wells Fargo Center',airport:'PHL',tz:'ET',division:'Metropolitan',lat:39.9011,lon:-75.1719,color:'#bf4300'},
+  {abbr:'PIT',name:'Pittsburgh Penguins',city:'Pittsburgh, PA',arena:'PPG Paints Arena',airport:'PIT',tz:'ET',division:'Metropolitan',lat:40.4394,lon:-79.9892,color:'#826100'},
+  {abbr:'WSH',name:'Washington Capitals',city:'Washington, DC',arena:'Capital One Arena',airport:'DCA/IAD',tz:'ET',division:'Metropolitan',lat:38.8981,lon:-77.0208,color:'#c8102e'},
+  {abbr:'CHI',name:'Chicago Blackhawks',city:'Chicago, IL',arena:'United Center',airport:'ORD/MDW',tz:'CT',division:'Central',lat:41.8806,lon:-87.6742,color:'#cf0a2c'},
+  {abbr:'COL',name:'Colorado Avalanche',city:'Denver, CO',arena:'Ball Arena',airport:'DEN',tz:'MT',division:'Central',lat:39.7486,lon:-105.0075,color:'#6f263d'},
+  {abbr:'DAL',name:'Dallas Stars',city:'Dallas, TX',arena:'American Airlines Center',airport:'DFW/DAL',tz:'CT',division:'Central',lat:32.7906,lon:-96.8103,color:'#006847'},
+  {abbr:'MIN',name:'Minnesota Wild',city:'Saint Paul, MN',arena:'Xcel Energy Center',airport:'MSP',tz:'CT',division:'Central',lat:44.9447,lon:-93.1011,color:'#154734'},
+  {abbr:'NSH',name:'Nashville Predators',city:'Nashville, TN',arena:'Bridgestone Arena',airport:'BNA',tz:'CT',division:'Central',lat:36.1592,lon:-86.7786,color:'#8a6400'},
+  {abbr:'STL',name:'St. Louis Blues',city:'St. Louis, MO',arena:'Enterprise Center',airport:'STL',tz:'CT',division:'Central',lat:38.6267,lon:-90.2025,color:'#002f87'},
+  {abbr:'UTA',name:'Utah Mammoth',city:'Salt Lake City, UT',arena:'Delta Center',airport:'SLC',tz:'MT',division:'Central',lat:40.7683,lon:-111.9011,color:'#426d90'},
+  {abbr:'WPG',name:'Winnipeg Jets',city:'Winnipeg, MB',arena:'Canada Life Centre',airport:'YWG',tz:'CT',division:'Central',lat:49.8928,lon:-97.1436,color:'#041e42'},
+  {abbr:'ANA',name:'Anaheim Ducks',city:'Anaheim, CA',arena:'Honda Center',airport:'SNA/LAX',tz:'PT',division:'Pacific',lat:33.8078,lon:-117.8767,color:'#b34700'},
+  {abbr:'CGY',name:'Calgary Flames',city:'Calgary, AB',arena:'Scotiabank Saddledome',airport:'YYC',tz:'MT',division:'Pacific',lat:51.0375,lon:-114.0519,color:'#c8102e'},
+  {abbr:'EDM',name:'Edmonton Oilers',city:'Edmonton, AB',arena:'Rogers Place',airport:'YEG',tz:'MT',division:'Pacific',lat:53.5469,lon:-113.4978,color:'#003a70'},
+  {abbr:'LAK',name:'Los Angeles Kings',city:'Los Angeles, CA',arena:'Crypto.com Arena',airport:'LAX',tz:'PT',division:'Pacific',lat:34.0431,lon:-118.2672,color:'#3b4249'},
+  {abbr:'SJS',name:'San Jose Sharks',city:'San Jose, CA',arena:'SAP Center',airport:'SJC/SFO',tz:'PT',division:'Pacific',lat:37.3328,lon:-121.9011,color:'#006d75'},
+  {abbr:'SEA',name:'Seattle Kraken',city:'Seattle, WA',arena:'Climate Pledge Arena',airport:'SEA',tz:'PT',division:'Pacific',lat:47.6222,lon:-122.3542,color:'#006b7d'},
+  {abbr:'VAN',name:'Vancouver Canucks',city:'Vancouver, BC',arena:'Rogers Arena',airport:'YVR',tz:'PT',division:'Pacific',lat:49.2778,lon:-123.1089,color:'#00205b'},
+  {abbr:'VGK',name:'Vegas Golden Knights',city:'Las Vegas, NV',arena:'T-Mobile Arena',airport:'LAS',tz:'PT',division:'Pacific',lat:36.1028,lon:-115.1783,color:'#75613c'}
+];
+
+
+const TEAM = Object.fromEntries(TEAMS.map(t => [t.abbr, t]));
+const DAY = 86400000;
+
+
+const HUB_COORDS = {
+  OMA: {lat: 41.2565, lon: -95.9345, name: 'Central US (Omaha)'},
+  NYC: {lat: 40.7506, lon: -73.9936, name: 'Northeast (NYC)'},
+  CHI: {lat: 41.8806, lon: -87.6742, name: 'Great Lakes (Chicago)'},
+  LAX: {lat: 34.0431, lon: -118.2672, name: 'West Coast (LA)'}
+};
+
+
+// Staggered 1,312-game season across 164 dates (every team plays 82 games: 41H / 41A)
+const PACKED_SCHEDULE = "2026-09-29|NYR,BOS,8:00 PM;FLA,CAR,5:00 PM;VAN,EDM,10:00 PM;MTL,TOR,7:00 PM;CHI,VGK,10:30 PM\n2026-09-30|LAK,COL,10:00 PM;PIT,PHI,7:30 PM;NYI,TOR,7:30 PM\n2026-10-01|BUF,CBJ,7:00 PM;SEA,CGY,9:00 PM;PHI,NJD,7:00 PM;MIN,NSH,8:00 PM;TBL,NYR,7:00 PM;FLA,SJS,10:00 PM;CHI,UTA,9:30 PM;EDM,VAN,10:00 PM\n2026-10-02|WSH,CAR,7:00 PM;STL,DAL,9:00 PM;NYR,DET,6:30 PM;ANA,VGK,10:00 PM;BOS,WPG,8:00 PM\n2026-10-03|CHI,BUF,7:00 PM;UTA,CBJ,7:00 PM;STL,COL,9:00 PM;SEA,EDM,7:00 PM;BOS,MIN,8:00 PM;DAL,NSH,8:00 PM;NJD,NYI,7:30 PM;CAR,PHI,7:00 PM;MTL,PIT,7:00 PM;LAK,SJS,10:00 PM;WSH,TBL,7:00 PM;OTT,TOR,7:00 PM;CGY,VAN,10:00 PM\n2026-10-04|FLA,ANA,8:00 PM;WPG,DET,1:00 PM;UTA,NYR,6:00 PM;CGY,SEA,8:00 PM;VGK,VAN,9:00 PM\n2026-10-05|OTT,BOS,7:30 PM;SJS,DAL,8:00 PM;WPG,PIT,7:30 PM;PHI,TBL,7:00 PM\n2026-10-06|MIN,BUF,7:00 PM;STL,CHI,8:00 PM;OTT,DET,7:00 PM;FLA,LAK,10:00 PM;CAR,MTL,7:00 PM;UTA,NJD,7:00 PM;NYI,NYR,7:30 PM;VGK,SEA,9:40 PM;NSH,TOR,7:00 PM\n2026-10-07|EDM,ANA,10:00 PM;COL,WPG,7:30 PM;PIT,WSH,7:30 PM\n2026-10-08|UTA,BOS,7:00 PM;DAL,BUF,7:00 PM;VAN,CAR,7:00 PM;COL,CGY,9:00 PM;NSH,MTL,7:00 PM;CHI,NYI,7:30 PM;PHI,OTT,7:00 PM;SJS,STL,8:00 PM;MIN,TBL,7:00 PM;TOR,VGK,10:00 PM\n2026-10-09|PIT,CBJ,7:00 PM;SEA,DET,7:00 PM;ANA,WPG,8:00 PM;NYR,WSH,7:00 PM\n2026-10-10|PHI,BOS,1:00 PM;UTA,BUF,7:00 PM;ANA,CGY,10:00 PM;CAR,CHI,7:00 PM;TOR,COL,7:00 PM;MIN,FLA,6:00 PM;DET,MTL,7:00 PM;VAN,NJD,3:30 PM;TBL,NYI,7:30 PM;NSH,OTT,7:00 PM;DAL,PIT,7:00 PM;EDM,SJS,4:00 PM;CBJ,STL,7:00 PM;LAK,VGK,10:00 PM\n2026-10-11|VAN,NYR,6:00 PM;CAR,PHI,7:00 PM;SEA,WSH,5:00 PM\n2026-10-12|FLA,BUF,1:00 PM;VGK,MIN,8:00 PM;OTT,NJD,7:00 PM\n2026-10-13|CGY,ANA,9:45 PM;WSH,CAR,6:45 PM;FLA,CBJ,6:15 PM;PIT,CHI,8:00 PM;COL,DAL,8:30 PM;NJD,DET,6:00 PM;EDM,LAK,10:30 PM;BUF,MTL,6:30 PM;VGK,NSH,8:45 PM;VAN,NYI,7:45 PM;TBL,NYR,7:15 PM;STL,OTT,7:30 PM;SEA,PHI,7:00 PM;BOS,SJS,11:00 PM;TOR,UTA,9:00 PM;MIN,WPG,8:15 PM\n2026-10-14|DAL,COL,8:30 PM;MTL,WSH,7:30 PM\n2026-10-15|WPG,CHI,8:00 PM;PHI,DET,7:30 PM;UTA,EDM,9:00 PM;VAN,FLA,7:00 PM;STL,MIN,8:00 PM;NYR,NJD,7:00 PM;SJS,NSH,8:00 PM;NYI,OTT,7:00 PM;SEA,TBL,7:00 PM;BUF,TOR,7:00 PM;CGY,VGK,10:00 PM\n2026-10-16|BOS,ANA,10:00 PM;PIT,COL,9:00 PM\n2026-10-17|NYR,CBJ,7:00 PM;DAL,CHI,7:00 PM;SJS,DET,7:00 PM;SEA,FLA,6:00 PM;BOS,LAK,9:00 PM;BUF,MTL,7:00 PM;STL,NSH,8:00 PM;OTT,PHI,7:00 PM;VAN,TBL,4:00 PM;NYI,TOR,7:00 PM;EDM,UTA,10:00 PM;PIT,VGK,10:00 PM;CAR,WPG,3:30 PM;NJD,WSH,1:00 PM\n2026-10-18|CAR,CGY,8:00 PM;CBJ,MIN,6:00 PM\n2026-10-19|ANA,NYR,7:00 PM;COL,PHI,7:00 PM;SJS,TOR,7:30 PM;PIT,UTA,9:00 PM\n2026-10-20|TOR,CBJ,7:00 PM;BOS,DAL,8:00 PM;MIN,EDM,9:00 PM;SJS,MTL,7:00 PM;COL,NJD,7:00 PM;ANA,NYI,7:00 PM;DET,SEA,9:40 PM;WPG,STL,8:00 PM;CAR,VAN,10:00 PM;TBL,VGK,10:30 PM;LAK,WSH,7:00 PM\n2026-10-21|PHI,BUF,7:30 PM;FLA,OTT,7:30 PM\n2026-10-22|NSH,BOS,7:00 PM;MIN,CGY,9:00 PM;WPG,DAL,8:00 PM;CAR,EDM,9:00 PM;ANA,NJD,7:00 PM;LAK,NYI,7:30 PM;SJS,OTT,7:00 PM;FLA,PIT,7:00 PM;UTA,SEA,10:00 PM;VGK,STL,8:00 PM;NYR,TOR,7:00 PM;DET,VAN,10:00 PM\n2026-10-23|MTL,CHI,8:00 PM;TBL,COL,9:00 PM\n2026-10-24|SJS,BOS,7:00 PM;VGK,CBJ,7:00 PM;DET,CGY,10:00 PM;TOR,EDM,7:00 PM;LAK,NJD,3:30 PM;NYR,OTT,7:00 PM;ANA,PHI,1:00 PM;NSH,PIT,7:00 PM;MIN,SEA,10:00 PM;CAR,STL,7:00 PM;TBL,UTA,9:00 PM;BUF,WSH,7:00 PM\n2026-10-25|FLA,CHI,3:00 PM;NYI,DAL,6:00 PM;COL,NSH,8:00 PM;MIN,VAN,10:00 PM;MTL,WPG,7:00 PM,Princess Auto Stadium (Winnipeg, MB)\n2026-10-26|TOR,CGY,8:30 PM;DET,EDM,9:30 PM;LAK,NYR,7:00 PM\n2026-10-27|VAN,ANA,10:00 PM;BOS,CAR,8:00 PM;LAK,CHI,8:00 PM;NJD,DAL,8:00 PM;NYI,NSH,8:00 PM;CBJ,PHI,7:00 PM;BUF,SJS,10:30 PM;MTL,STL,8:00 PM;MIN,UTA,9:00 PM;OTT,VGK,10:00 PM;FLA,WPG,8:00 PM\n2026-10-28|NJD,COL,9:00 PM;CGY,EDM,8:30 PM;TOR,SEA,10:00 PM;PHI,WSH,7:30 PM\n2026-10-29|BUF,ANA,10:00 PM;CBJ,CAR,7:00 PM;MTL,DAL,8:00 PM;CHI,DET,7:30 PM;OTT,LAK,10:00 PM;NYI,MIN,8:00 PM;WSH,NSH,8:00 PM;UTA,PIT,7:00 PM;VAN,SJS,10:00 PM;BOS,STL,8:00 PM;WPG,TBL,7:00 PM\n2026-10-30|SEA,CGY,8:00 PM;WPG,FLA,7:00 PM;NJD,VGK,6:00 PM\n2026-10-31|CHI,BOS,1:00 PM;CGY,COL,10:00 PM;CBJ,DAL,8:00 PM;STL,DET,1:00 PM;BUF,LAK,4:00 PM;PIT,MTL,7:00 PM;TBL,NSH,2:00 PM;EDM,NYI,2:00 PM;OTT,SJS,4:00 PM;TOR,VAN,7:00 PM\n2026-11-01|OTT,ANA,8:00 PM;WPG,CAR,1:00 PM;EDM,NYR,6:00 PM;UTA,PHI,4:00 PM;MIN,WSH,3:30 PM\n2026-11-02|VGK,BOS,7:00 PM;COL,CHI,8:00 PM;DET,FLA,7:00 PM;CGY,SJS,9:00 PM\n2026-11-03|COL,CBJ,7:00 PM;WPG,MTL,7:00 PM;EDM,NJD,7:30 PM;CAR,NSH,8:00 PM;STL,NYR,7:00 PM;MIN,PHI,7:00 PM;VGK,PIT,7:00 PM;DET,TBL,7:00 PM;UTA,TOR,7:00 PM;ANA,VAN,9:00 PM;DAL,WSH,7:00 PM\n2026-11-04|OTT,BUF,7:30 PM;CHI,FLA,7:30 PM;SJS,LAK,10:00 PM;CGY,SEA,10:00 PM\n2026-11-05|DAL,CBJ,7:00 PM;NSH,COL,9:30 PM;VGK,DET,7:00 PM;ANA,EDM,8:00 PM;UTA,MTL,7:00 PM;STL,NJD,7:00 PM;CAR,NYI,7:00 PM;PHI,NYR,7:00 PM;BOS,PIT,7:00 PM;CHI,TBL,7:00 PM;VAN,WPG,7:00 PM\n2026-11-06|CBJ,BUF,7:00 PM;ANA,CGY,8:00 PM;SJS,MIN,8:00 PM\n2026-11-07|CHI,CAR,8:00 PM;DET,COL,9:00 PM;SJS,DAL,8:00 PM;VAN,EDM,10:00 PM;PIT,LAK,9:00 PM;TBL,MIN,8:00 PM;STL,NSH,1:00 PM;NJD,NYI,7:00 PM;UTA,OTT,7:00 PM;NYR,SEA,5:00 PM;MTL,TOR,7:00 PM;FLA,WSH,12:30 PM\n2026-11-08|PIT,ANA,8:00 PM;FLA,BOS,1:00 PM;VGK,BUF,3:30 PM;PHI,CGY,7:00 PM;NJD,TOR,7:00 PM;TBL,WPG,6:00 PM\n2026-11-09|NYR,EDM,8:00 PM;NYI,SJS,10:00 PM;PHI,VAN,9:30 PM\n2026-11-10|FLA,CBJ,7:30 PM;NSH,LAK,10:00 PM;MIN,MTL,7:00 PM;WSH,OTT,7:00 PM;DET,STL,8:00 PM;COL,TOR,7:00 PM;NJD,WPG,7:00 PM\n2026-11-11|NSH,ANA,10:00 PM;TBL,BUF,7:00 PM;NYR,CGY,7:30 PM;PHI,EDM,9:00 PM;PIT,SJS,10:00 PM;UTA,VGK,9:30 PM\n2026-11-12|MTL,BOS,7:00 PM;TBL,CBJ,7:00 PM;BUF,CHI,8:00 PM;WPG,DAL,8:00 PM;DET,FLA,7:30 PM;NYI,LAK,10:00 PM;WSH,NJD,7:00 PM;COL,OTT,7:00 PM;CAR,SEA,12:00 PM,Veikkaus Arena (Helsinki, FI);MIN,TOR,7:00 PM;STL,UTA,9:00 PM\n2026-11-13|NYR,VAN,9:00 PM;NSH,VGK,10:00 PM\n2026-11-14|NYI,ANA,10:00 PM;MIN,BOS,7:00 PM;SEA,CAR,1:00 PM,Veikkaus Arena (Helsinki, FI);PHI,CBJ,7:00 PM;WPG,CHI,3:30 PM;BUF,DAL,8:00 PM;CGY,LAK,10:00 PM;COL,MTL,7:00 PM;OTT,PIT,7:00 PM;FLA,STL,7:00 PM;DET,TBL,7:00 PM;EDM,TOR,7:00 PM;SJS,UTA,9:00 PM;NJD,WSH,7:00 PM\n2026-11-15|CGY,ANA,8:00 PM;FLA,DAL,8:00 PM;EDM,PHI,7:30 PM;NSH,SJS,9:00 PM;VAN,VGK,9:00 PM\n2026-11-16|MTL,NYR,7:30 PM;VAN,UTA,9:30 PM\n2026-11-17|LAK,BOS,7:00 PM;TOR,CHI,7:30 PM;EDM,FLA,7:00 PM;NSH,MIN,8:00 PM;CBJ,NYI,7:00 PM;BUF,PHI,7:00 PM;CGY,SJS,10:00 PM;ANA,STL,8:00 PM;WSH,TBL,7:30 PM;DAL,VGK,10:00 PM;OTT,WPG,7:00 PM\n2026-11-18|BOS,DET,7:30 PM;MTL,NJD,7:30 PM;COL,UTA,9:00 PM\n2026-11-19|MTL,CAR,7:00 PM;MIN,CGY,8:00 PM;CBJ,CHI,8:00 PM;ANA,COL,9:00 PM;PHI,OTT,7:00 PM;STL,PIT,7:00 PM;VAN,SEA,9:40 PM;EDM,TBL,7:30 PM;LAK,TOR,7:00 PM;DAL,VGK,10:00 PM;NYI,WPG,7:00 PM;BUF,WSH,7:00 PM\n2026-11-21|WSH,BOS,7:00 PM;EDM,CAR,1:00 PM;CHI,CGY,3:30 PM;NYI,DET,7:00 PM;BUF,FLA,6:00 PM;PHI,MTL,7:00 PM;PIT,NSH,6:00 PM;LAK,OTT,7:00 PM;SEA,SJS,10:00 PM;NJD,STL,7:00 PM;CBJ,TOR,7:00 PM;ANA,UTA,9:00 PM;MIN,VAN,10:00 PM;VGK,WPG,7:00 PM\n2026-11-22|PIT,DAL,7:00 PM;CAR,NYR,12:30 PM;EDM,STL,7:00 PM;BUF,TBL,5:00 PM;CHI,VAN,8:00 PM\n2026-11-23|LAK,MTL,7:30 PM;CBJ,NJD,7:00 PM;TOR,NYI,7:30 PM;CGY,OTT,7:30 PM;ANA,SEA,9:40 PM;MIN,SJS,10:00 PM;UTA,WPG,7:30 PM\n2026-11-24|VGK,EDM,8:00 PM\n2026-11-25|SJS,ANA,10:00 PM;WPG,BOS,7:00 PM;NYR,BUF,7:00 PM;NJD,CBJ,7:00 PM;MTL,COL,9:30 PM;NSH,DAL,8:00 PM;VAN,DET,7:30 PM;OTT,FLA,7:00 PM;UTA,MIN,8:00 PM;STL,NYI,7:00 PM;CGY,PIT,7:00 PM;CHI,SEA,9:40 PM;CAR,TBL,7:00 PM;PHI,WSH,7:00 PM\n2026-11-27|LAK,ANA,4:00 PM;TOR,BOS,1:00 PM;PIT,BUF,8:00 PM;DET,CBJ,3:00 PM;NYR,CHI,5:30 PM;SEA,EDM,8:00 PM;COL,MIN,4:00 PM;CGY,NJD,1:00 PM;UTA,NSH,1:00 PM;WPG,NYI,7:30 PM;VAN,PHI,3:00 PM;VGK,SJS,4:00 PM;DAL,STL,2:00 PM;OTT,TBL,3:00 PM;FLA,WSH,3:00 PM\n2026-11-28|OTT,CAR,7:00 PM;SJS,COL,9:00 PM;UTA,DAL,8:00 PM;NSH,DET,7:00 PM;TBL,FLA,6:00 PM;ANA,LAK,9:00 PM;WPG,NJD,7:00 PM;CGY,NYR,7:00 PM;NYI,PHI,7:30 PM;TOR,PIT,7:00 PM;EDM,SEA,10:00 PM;WSH,STL,7:00 PM;MTL,VGK,4:00 PM\n2026-11-29|VAN,BOS,5:00 PM;MIN,CHI,2:00 PM\n2026-11-30|OTT,NSH,1:00 PM;CAR,NYR,7:00 PM;CBJ,PIT,7:00 PM;PHI,TOR,7:30 PM;MTL,UTA,9:30 PM;CHI,WPG,7:30 PM\n2026-12-01|MIN,ANA,10:00 PM;COL,BOS,8:00 PM;CGY,DET,7:00 PM;BUF,EDM,8:00 PM;VGK,LAK,10:00 PM;SJS,NJD,7:30 PM;FLA,NYI,7:00 PM;DAL,SEA,9:40 PM;VAN,WSH,7:00 PM\n2026-12-02|TBL,MTL,7:30 PM;PIT,STL,8:00 PM;WPG,UTA,9:30 PM\n2026-12-03|CBJ,CAR,7:00 PM;BUF,CGY,8:00 PM;COL,DET,7:00 PM;WSH,EDM,8:00 PM;MIN,LAK,10:00 PM;CHI,NSH,8:00 PM;SJS,NYR,7:00 PM;NJD,OTT,7:00 PM;NYI,PHI,7:30 PM;DAL,SEA,10:00 PM;FLA,TOR,7:00 PM;UTA,VGK,10:00 PM\n2026-12-04|SEA,ANA,10:00 PM;SJS,NYI,7:00 PM;CHI,STL,8:00 PM;BUF,VAN,9:00 PM\n2026-12-05|DET,BOS,1:00 PM;TOR,CAR,7:00 PM;WSH,CGY,3:30 PM;UTA,LAK,10:00 PM;PHI,MIN,8:00 PM;FLA,MTL,1:00 PM;CBJ,NSH,2:00 PM;COL,NYR,7:00 PM;TBL,OTT,7:00 PM;NJD,PIT,3:00 PM;DAL,VAN,10:00 PM;WPG,VGK,7:00 PM\n2026-12-06|WPG,ANA,8:00 PM;EDM,CHI,7:00 PM;OTT,MTL,7:00 PM;SJS,PIT,3:00 PM;BUF,SEA,8:00 PM;NSH,STL,5:00 PM\n2026-12-07|COL,NYI,1:00 PM;NJD,NYR,7:00 PM;CBJ,TBL,7:00 PM;WSH,VAN,9:00 PM\n2026-12-08|NYR,CAR,7:00 PM;NSH,CGY,8:00 PM;BOS,FLA,7:00 PM;EDM,MIN,8:00 PM;VGK,MTL,7:00 PM;ANA,OTT,7:00 PM;CHI,PIT,7:30 PM;SEA,SJS,10:00 PM;COL,STL,8:00 PM;PHI,WPG,7:00 PM\n2026-12-09|TOR,DAL,7:30 PM;SJS,LAK,9:30 PM;DET,NJD,7:00 PM\n2026-12-10|EDM,BUF,7:00 PM;MIN,CBJ,7:00 PM;PIT,FLA,7:00 PM;ANA,MTL,7:00 PM;CGY,NYI,7:00 PM;VGK,OTT,7:00 PM;WSH,SEA,9:30 PM;BOS,TBL,7:00 PM;STL,UTA,9:00 PM;NSH,VAN,9:00 PM;CHI,WPG,7:00 PM\n2026-12-11|NYI,CAR,7:00 PM;NYR,DET,7:00 PM;CGY,PHI,7:00 PM;LAK,SJS,10:00 PM\n2026-12-12|NJD,BOS,1:00 PM;ANA,BUF,7:00 PM;MTL,CBJ,1:00 PM;UTA,CHI,7:00 PM;WSH,COL,9:00 PM;STL,DAL,8:00 PM;FLA,DET,7:00 PM;VAN,LAK,10:00 PM;WPG,MIN,3:30 PM;EDM,OTT,7:00 PM;NSH,SEA,10:00 PM;PIT,TBL,3:30 PM;VGK,TOR,7:00 PM\n2026-12-13|BOS,CAR,1:00 PM;CBJ,NYR,6:00 PM;TBL,STL,8:00 PM;ANA,TOR,7:00 PM\n2026-12-14|UTA,COL,9:00 PM;EDM,MTL,7:30 PM;BUF,OTT,2:00 PM;FLA,PHI,7:00 PM;VAN,SJS,10:00 PM\n2026-12-15|FLA,BOS,7:00 PM;CGY,BUF,7:00 PM;CAR,CBJ,7:00 PM;WSH,DAL,9:30 PM;LAK,DET,7:30 PM;TOR,MIN,8:00 PM;NYR,NJD,7:00 PM;SEA,NSH,8:00 PM;TBL,PIT,7:00 PM;WPG,STL,8:00 PM;NYI,UTA,9:00 PM\n2026-12-16|VAN,ANA,9:00 PM;NYI,COL,9:00 PM;NYR,PHI,7:30 PM;SJS,VGK,10:00 PM\n2026-12-17|STL,BOS,7:00 PM;SEA,CBJ,7:00 PM;DAL,EDM,8:00 PM;TOR,NJD,7:30 PM;LAK,PIT,7:00 PM;CGY,TBL,7:00 PM;CAR,UTA,9:00 PM;DET,WSH,7:00 PM\n2026-12-18|MTL,BUF,7:30 PM;CAR,COL,9:00 PM;ANA,MIN,8:00 PM;NSH,NYR,7:00 PM;CHI,OTT,1:00 PM,PSD Bank Dome (Düsseldorf, DE);DET,PHI,7:00 PM;SEA,PIT,7:00 PM;NYI,VGK,10:00 PM\n2026-12-19|LAK,CBJ,7:00 PM;UTA,EDM,3:30 PM;CGY,FLA,1:00 PM;MTL,MIN,7:00 PM;BOS,NJD,12:00 PM;TBL,TOR,7:00 PM;SJS,VAN,10:00 PM;DAL,WPG,7:00 PM;STL,WSH,7:00 PM\n2026-12-20|PHI,BOS,1:00 PM;LAK,BUF,6:00 PM;OTT,CHI,8:00 AM,PSD Bank Dome (Düsseldorf, DE);SEA,COL,8:00 PM;TBL,DET,5:00 PM;ANA,EDM,7:00 PM;NSH,NJD,7:00 PM;NYR,NYI,7:00 PM;DAL,WPG,5:00 PM\n2026-12-21|STL,FLA,7:00 PM;CBJ,PHI,7:00 PM;WSH,TOR,2:00 PM;UTA,VAN,9:00 PM;CAR,VGK,10:00 PM\n2026-12-22|VGK,ANA,9:30 PM;MTL,CBJ,7:00 PM;CGY,DAL,8:00 PM;TOR,DET,7:00 PM;LAK,MIN,8:00 PM;WPG,NSH,8:00 PM;BOS,NYI,7:00 PM;NJD,NYR,7:00 PM;BUF,PIT,7:00 PM;SJS,SEA,9:40 PM;STL,TBL,7:00 PM\n2026-12-26|NYI,BOS,7:00 PM;NJD,BUF,7:00 PM;PIT,CAR,7:00 PM;VAN,CGY,10:00 PM;TBL,FLA,6:00 PM;UTA,LAK,10:00 PM;WPG,MIN,7:00 PM;TOR,MTL,7:00 PM;DET,NSH,7:00 PM;VGK,SJS,10:00 PM;CBJ,WSH,8:00 PM\n2026-12-27|COL,ANA,8:00 PM;EDM,CBJ,6:00 PM;PHI,CHI,3:00 PM;DAL,MTL,7:00 PM;BOS,NJD,7:00 PM;OTT,NYI,7:00 PM;NYR,STL,5:00 PM\n2026-12-28|DET,BUF,7:00 PM;TBL,CAR,7:00 PM;NSH,FLA,7:00 PM;VGK,MIN,2:00 PM;LAK,VAN,9:30 PM;SJS,WPG,7:30 PM;EDM,WSH,7:00 PM\n2026-12-29|TOR,ANA,10:00 PM;SJS,CGY,8:00 PM;VGK,CHI,8:00 PM;STL,COL,9:00 PM;CBJ,MTL,7:00 PM;DET,NYR,7:00 PM;DAL,OTT,7:00 PM;CAR,PIT,7:00 PM;PHI,SEA,9:40 PM;NSH,TBL,7:00 PM;NJD,UTA,9:00 PM\n2026-12-30|EDM,BOS,7:30 PM;BUF,FLA,7:00 PM;TOR,LAK,10:00 PM;WSH,NYI,4:00 PM;SEA,VAN,9:30 PM\n2026-12-31|WSH,CBJ,2:00 PM;WPG,CGY,8:00 PM;NYR,DAL,9:00 PM;CAR,DET,2:00 PM;PIT,OTT,2:00 PM;MTL,TBL,2:00 PM;COL,UTA,6:00 PM,Rice-Eccles Stadium (Salt Lake City, UT);STL,VGK,3:00 PM\n2027-01-01|NJD,ANA,4:00 PM;BOS,CHI,3:00 PM;FLA,NSH,2:00 PM;MIN,PIT,6:00 PM;PHI,SJS,4:00 PM\n2027-01-02|NSH,CAR,7:00 PM;BOS,CBJ,7:00 PM;CHI,DAL,8:00 PM;EDM,DET,3:30 PM;MTL,FLA,1:00 PM;NJD,LAK,9:00 PM;STL,MIN,7:00 PM;NYI,SEA,10:00 PM;TOR,SJS,7:00 PM;BUF,TBL,7:00 PM;VAN,UTA,10:00 PM;COL,VGK,10:00 PM;CGY,WPG,7:00 PM;OTT,WSH,7:00 PM\n2027-01-03|PHI,ANA,8:00 PM;CBJ,NYR,6:00 PM;EDM,PIT,3:00 PM;VAN,SEA,8:00 PM;CGY,STL,7:00 PM\n2027-01-04|WPG,BUF,7:30 PM;VGK,COL,9:00 PM;DET,DAL,8:00 PM;PHI,LAK,10:00 PM;CHI,MTL,7:30 PM;NJD,SJS,10:00 PM;TOR,WSH,7:30 PM\n2027-01-05|MIN,ANA,10:00 PM;BUF,BOS,7:30 PM;STL,CAR,7:00 PM;NYR,CBJ,7:00 PM;FLA,CGY,8:00 PM;EDM,NSH,7:30 PM;TBL,SEA,9:40 PM;OTT,UTA,9:00 PM;NYI,VAN,9:00 PM\n2027-01-06|OTT,COL,9:30 PM;WSH,LAK,10:00 PM;BOS,MTL,7:30 PM;DAL,SJS,10:00 PM\n2027-01-07|PIT,CAR,7:00 PM;NYI,CGY,8:00 PM;UTA,DET,7:00 PM;FLA,EDM,8:00 PM;CBJ,NJD,7:00 PM;CHI,NYR,7:00 PM;TOR,PHI,7:00 PM;TBL,VAN,9:00 PM;MIN,VGK,9:30 PM;NSH,WPG,7:00 PM\n2027-01-08|DAL,ANA,10:00 PM;BUF,CBJ,7:00 PM;SEA,COL,9:00 PM;WSH,SJS,10:00 PM;OTT,STL,8:00 PM\n2027-01-09|CAR,BUF,7:00 PM;TBL,CGY,3:30 PM;BOS,DET,7:00 PM;NYI,EDM,3:30 PM;DAL,LAK,9:00 PM;NSH,MIN,8:00 PM;PIT,MTL,7:00 PM;CHI,NJD,12:00 PM;NYR,SJS,10:00 PM;PHI,TOR,7:00 PM;FLA,VAN,10:00 PM;SEA,VGK,10:00 PM;UTA,WPG,7:00 PM\n2027-01-10|WSH,ANA,3:30 PM;NSH,COL,8:00 PM;CHI,PHI,7:30 PM\n2027-01-11|TBL,EDM,8:30 PM;NYR,LAK,10:00 PM;WPG,TOR,7:30 PM\n2027-01-12|NYR,ANA,10:00 PM;CAR,BOS,7:00 PM;NJD,BUF,7:00 PM;CBJ,CGY,8:00 PM;UTA,CHI,8:00 PM;OTT,DAL,8:00 PM;PHI,NSH,8:00 PM;COL,PIT,7:00 PM;FLA,SEA,9:40 PM;VGK,WSH,7:00 PM\n2027-01-13|SJS,EDM,9:00 PM;STL,LAK,10:00 PM;NJD,MTL,7:00 PM;PIT,NYI,7:30 PM;DET,UTA,9:00 PM\n2027-01-14|STL,ANA,10:00 PM;DAL,BOS,7:00 PM;COL,BUF,7:30 PM;SJS,CGY,8:00 PM;FLA,MIN,9:30 PM;MTL,NSH,8:00 PM;WPG,OTT,7:00 PM;VGK,TBL,7:00 PM;CHI,TOR,7:00 PM;SEA,VAN,9:00 PM;CAR,WSH,7:00 PM\n2027-01-15|PHI,CAR,7:00 PM;CBJ,EDM,8:00 PM;DAL,NYI,7:00 PM;LAK,UTA,9:00 PM\n2027-01-16|NSH,BUF,7:00 PM;LAK,CGY,10:00 PM;DET,CHI,7:00 PM;VGK,FLA,6:00 PM;NYI,NJD,7:00 PM;BOS,NYR,12:00 PM;MTL,PHI,7:00 PM;SJS,SEA,10:00 PM;MIN,STL,7:00 PM;OTT,TBL,3:30 PM;PIT,TOR,7:00 PM;CBJ,VAN,10:00 PM;ANA,WPG,7:00 PM;COL,WSH,7:00 PM\n2027-01-17|VGK,CAR,6:00 PM;MIN,DET,5:00 PM;WPG,EDM,7:00 PM;DAL,NYR,6:00 PM\n2027-01-18|TBL,BOS,1:30 PM;MTL,BUF,2:00 PM;CGY,CHI,8:30 PM;VAN,COL,3:00 PM;OTT,FLA,7:30 PM;NSH,NYI,3:00 PM;WSH,PIT,4:00 PM;CBJ,SEA,4:00 PM;UTA,SJS,4:00 PM;STL,TOR,7:30 PM\n2027-01-19|ANA,DET,7:00 PM;SEA,LAK,10:00 PM;DAL,NJD,7:00 PM;PHI,NYR,7:00 PM;MIN,WPG,7:00 PM;MTL,WSH,7:00 PM\n2027-01-20|DAL,CHI,7:30 PM;BOS,COL,9:00 PM;VAN,NSH,2:00 PM;BUF,NYI,7:00 PM;TOR,OTT,7:30 PM;EDM,VGK,10:00 PM\n2027-01-21|SEA,BUF,7:00 PM;CGY,CBJ,7:00 PM;CAR,FLA,7:00 PM;EDM,LAK,10:00 PM;DET,MIN,9:00 PM;STL,MTL,7:00 PM;TBL,NJD,7:00 PM;NSH,PHI,7:00 PM;ANA,PIT,7:00 PM;NYR,WPG,7:00 PM\n2027-01-22|VAN,CHI,8:00 PM;COL,DAL,8:00 PM;BOS,VGK,10:00 PM;NYI,WSH,7:00 PM\n2027-01-23|ANA,CAR,7:00 PM;TBL,DET,12:30 PM;NYR,MIN,8:00 PM;CGY,MTL,7:00 PM;LAK,NSH,5:00 PM;SEA,NYI,7:30 PM;CBJ,OTT,3:30 PM;NJD,PHI,7:30 PM;VAN,PIT,7:00 PM;EDM,SJS,10:00 PM;TOR,STL,7:00 PM;BOS,UTA,9:00 PM\n2027-01-24|ANA,CBJ,5:00 PM;VGK,CHI,7:00 PM;DAL,COL,5:00 PM;LAK,FLA,6:00 PM;WSH,NJD,7:00 PM;BUF,WPG,3:00 PM\n2027-01-25|PIT,DET,7:00 PM;SEA,NYR,7:00 PM;CAR,OTT,7:30 PM;MIN,UTA,9:00 PM\n2027-01-26|CBJ,BOS,7:00 PM;EDM,COL,9:00 PM;ANA,DAL,8:00 PM;VAN,MIN,8:00 PM;CAR,MTL,7:00 PM;SEA,NJD,7:00 PM;VGK,NSH,8:00 PM;FLA,PHI,7:00 PM;NYI,PIT,7:00 PM;CHI,STL,8:00 PM;LAK,TBL,7:00 PM;CGY,TOR,7:00 PM\n2027-01-27|TOR,DET,7:30 PM;FLA,NYR,7:30 PM;BUF,UTA,9:00 PM\n2027-01-28|CHI,ANA,10:00 PM;NYI,CAR,6:30 PM;WPG,CBJ,7:00 PM;MTL,CGY,8:00 PM;VAN,DAL,8:00 PM;NJD,EDM,8:00 PM;SEA,MIN,9:00 PM;BOS,OTT,7:00 PM;LAK,PHI,7:30 PM;NSH,SJS,10:00 PM;COL,STL,8:00 PM;BUF,VGK,10:00 PM\n2027-01-29|FLA,DET,7:00 PM;NYR,PIT,7:00 PM;WSH,UTA,9:00 PM\n2027-01-30|NSH,ANA,10:00 PM;TOR,BOS,7:00 PM;LAK,CAR,7:00 PM;DET,CBJ,7:00 PM;NJD,CGY,3:30 PM;BUF,COL,5:00 PM;MTL,EDM,7:00 PM;DAL,MIN,9:00 PM;NYR,OTT,7:00 PM;WPG,PHI,1:00 PM;CHI,SJS,4:00 PM;VAN,STL,3:30 PM;NYI,TBL,7:00 PM;WSH,VGK,10:00 PM\n2027-01-31|PHI,PIT,12:00 PM;NJD,SEA,4:00 PM;NSH,UTA,8:00 PM\n2027-02-01|VGK,CGY,7:30 PM;NYI,FLA,2:00 PM;MTL,VAN,8:30 PM\n2027-02-02|TBL,PIT,7:00 PM;NSH,UTA,9:00 PM;WPG,WSH,6:00 PM\n2027-02-03|NYI,BUF,7:00 PM;UTA,CGY,9:00 PM;VGK,EDM,9:00 PM;WSH,FLA,7:00 PM;WPG,NYR,7:30 PM;TBL,PHI,7:30 PM;MTL,SEA,9:40 PM;NJD,VAN,9:00 PM\n2027-02-08|LAK,DAL,8:00 PM;CBJ,TOR,7:30 PM\n2027-02-09|DET,ANA,10:00 PM;COL,CAR,7:30 PM;CBJ,OTT,7:00 PM;LAK,STL,8:00 PM\n2027-02-10|CHI,SJS,10:00 PM;BOS,TOR,7:30 PM\n2027-02-11|CHI,ANA,10:00 PM;MIN,CAR,7:30 PM;OTT,CBJ,7:00 PM;DET,LAK,10:00 PM\n2027-02-12|STL,EDM,8:00 PM;COL,FLA,7:00 PM;NYI,NYR,7:00 PM;DAL,TBL,7:00 PM;CGY,UTA,9:00 PM\n2027-02-13|CBJ,BOS,7:00 PM;BUF,CAR,7:00 PM;PIT,EDM,7:00 PM;DAL,FLA,6:00 PM;CHI,LAK,6:00 PM;WSH,MTL,1:00 PM;ANA,NSH,1:00 PM;MIN,NYI,7:00 PM;TOR,OTT,7:00 PM;NJD,PHI,7:30 PM;STL,SEA,10:00 PM;DET,SJS,4:00 PM;COL,TBL,7:00 PM;WPG,VAN,10:00 PM;CGY,VGK,10:00 PM\n2027-02-14|NYR,MTL,1:00 PM;UTA,WSH,1:00 PM\n2027-02-15|ANA,BOS,2:00 PM;CBJ,COL,3:00 PM;CGY,LAK,10:00 PM;OTT,MIN,7:30 PM;UTA,NYI,3:00 PM;BUF,NYR,6:00 PM;PIT,SEA,4:00 PM;WPG,SJS,7:30 PM;PHI,STL,8:00 PM;DET,VGK,10:00 PM\n2027-02-16|MIN,DAL,8:00 PM;NJD,NSH,8:00 PM;FLA,TBL,7:30 PM;CAR,TOR,7:00 PM;PIT,VAN,9:00 PM;ANA,WSH,7:00 PM\n2027-02-17|BOS,CGY,9:00 PM;STL,CHI,7:30 PM;COL,EDM,9:00 PM;OTT,SEA,9:40 PM;CBJ,UTA,9:00 PM;LAK,WPG,7:30 PM\n2027-02-18|CAR,BUF,7:00 PM;PHI,DAL,9:00 PM;MTL,DET,7:00 PM;NJD,FLA,7:00 PM;LAK,MIN,8:00 PM;TOR,NSH,8:00 PM;NYR,NYI,7:00 PM;ANA,TBL,7:00 PM;OTT,VAN,9:00 PM;CBJ,VGK,10:00 PM\n2027-02-19|DET,CAR,7:00 PM;PIT,CGY,8:00 PM;BOS,EDM,8:00 PM;SEA,UTA,9:00 PM;STL,WPG,7:00 PM;SJS,WSH,7:00 PM\n2027-02-20|NSH,CBJ,5:00 PM;MIN,CHI,3:00 PM;VGK,DAL,8:00 PM,AT&T Stadium (Arlington, TX);ANA,FLA,5:00 PM;SEA,LAK,10:30 PM;NYI,MTL,7:00 PM;BUF,NJD,1:30 PM;NYR,PHI,12:30 PM;TOR,TBL,7:00 PM;COL,VAN,10:00 PM\n2027-02-21|NYR,CAR,1:00 PM;OTT,CGY,7:00 PM;NJD,CHI,6:00 PM;BUF,DET,3:30 PM;SJS,FLA,6:00 PM;UTA,STL,6:00 PM;BOS,VAN,8:00 PM;PIT,WPG,5:00 PM;NSH,WSH,6:00 PM\n2027-02-22|NYI,CBJ,7:00 PM;VGK,COL,9:00 PM;OTT,EDM,7:30 PM;MTL,PHI,2:00 PM;BOS,SEA,9:40 PM\n2027-02-23|NYI,CHI,8:00 PM;VAN,DAL,8:00 PM;PIT,MIN,8:00 PM;CAR,NJD,7:30 PM;WPG,NSH,8:00 PM;SJS,TBL,7:00 PM;DET,TOR,7:00 PM;NYR,WSH,7:00 PM\n2027-02-24|SEA,ANA,10:00 PM;MTL,LAK,10:00 PM;BUF,PHI,7:00 PM;CGY,UTA,8:00 PM;FLA,VGK,9:30 PM\n2027-02-25|WSH,BOS,8:00 PM;SJS,CAR,7:00 PM;WPG,COL,9:00 PM;TBL,DAL,8:00 PM;EDM,NSH,8:00 PM;DET,OTT,7:00 PM;TOR,PIT,7:00 PM;VAN,STL,8:00 PM\n2027-02-26|OTT,BUF,7:30 PM;NJD,CBJ,7:00 PM;LAK,CHI,8:00 PM;PHI,NYI,7:00 PM;WSH,NYR,7:00 PM;FLA,UTA,9:00 PM;ANA,VGK,9:00 PM\n2027-02-27|MTL,ANA,7:00 PM;DET,BOS,12:30 PM;TOR,BUF,7:00 PM;TBL,CAR,7:00 PM;NYI,CBJ,7:00 PM;FLA,COL,7:00 PM;EDM,DAL,3:00 PM;LAK,NSH,8:00 PM;SJS,PHI,7:00 PM;WPG,SEA,7:00 PM;MIN,STL,4:00 PM;CGY,VAN,10:00 PM\n2027-02-28|COL,CHI,6:30 PM;NJD,MIN,3:30 PM;NYR,PIT,1:00 PM;DAL,STL,9:00 PM;UTA,TBL,7:00 PM\n2027-03-01|CAR,CBJ,7:00 PM;EDM,CHI,8:30 PM;ANA,LAK,10:00 PM;WSH,NYI,7:00 PM;MTL,SJS,10:00 PM;DET,TOR,7:00 PM;SEA,WPG,7:00 PM\n2027-03-02|PIT,BUF,7:00 PM;UTA,FLA,7:00 PM;OTT,NJD,7:00 PM;COL,NSH,8:00 PM;VGK,PHI,7:00 PM\n2027-03-03|EDM,CGY,8:30 PM;MIN,DAL,8:00 PM;TBL,LAK,10:00 PM;BOS,NYR,7:00 PM;CBJ,SJS,10:00 PM;SEA,TOR,6:30 PM;CHI,VAN,10:00 PM;CAR,WSH,7:00 PM\n2027-03-04|STL,BUF,7:00 PM;NJD,DET,6:00 PM;PIT,FLA,8:30 PM;SEA,MTL,7:00 PM;UTA,NSH,8:00 PM;VGK,NYI,7:00 PM;BOS,OTT,7:00 PM\n2027-03-05|TBL,ANA,10:00 PM;TOR,CAR,7:00 PM;CHI,CGY,8:00 PM;CBJ,LAK,10:00 PM;VGK,NJD,7:00 PM;DAL,PHI,7:00 PM;COL,SJS,10:00 PM;WSH,WPG,7:00 PM\n2027-03-06|PIT,BOS,12:30 PM;NYR,BUF,3:00 PM;DAL,DET,7:00 PM;CHI,EDM,10:00 PM;TOR,FLA,7:00 PM;VAN,MTL,7:00 PM;MIN,NSH,8:00 PM;SEA,OTT,3:00 PM;TBL,SJS,10:00 PM\n2027-03-07|CBJ,ANA,8:00 PM;UTA,CAR,1:00 PM;COL,LAK,4:00 PM;WSH,MIN,9:30 PM;PIT,NYI,1:00 PM;VGK,NYR,7:00 PM;BUF,OTT,3:00 PM;STL,PHI,3:30 PM;CGY,WPG,2:00 PM\n2027-03-08|SEA,BOS,7:00 PM;TBL,CHI,8:00 PM;DAL,TOR,7:30 PM\n2027-03-09|VAN,BUF,7:00 PM;PHI,COL,9:00 PM;LAK,EDM,8:00 PM;NJD,FLA,7:00 PM;CAR,MIN,8:00 PM;MTL,NYI,7:00 PM;OTT,PIT,7:00 PM;NSH,STL,8:00 PM;NYR,UTA,9:00 PM;SJS,VGK,10:30 PM;DET,WPG,7:00 PM;CGY,WSH,7:00 PM\n2027-03-10|WSH,CHI,8:00 PM;ANA,DAL,8:00 PM;BOS,MTL,7:30 PM\n2027-03-11|VAN,CBJ,7:00 PM;NYR,COL,9:00 PM;NSH,EDM,8:00 PM;MIN,OTT,7:00 PM;BOS,PIT,7:30 PM;LAK,SEA,9:30 PM;SJS,STL,8:00 PM;NJD,TBL,7:00 PM;PHI,VGK,10:00 PM;TOR,WPG,7:00 PM\n2027-03-12|CGY,CAR,7:00 PM;BUF,DET,7:00 PM;NYI,FLA,7:00 PM\n2027-03-13|CGY,BOS,7:00 PM;NJD,CAR,7:00 PM;SJS,CBJ,7:00 PM;CHI,COL,6:00 PM;DAL,LAK,9:00 PM;MTL,OTT,7:00 PM;WSH,PIT,3:00 PM;EDM,SEA,10:00 PM;ANA,STL,6:30 PM;NYI,TBL,7:00 PM;VAN,TOR,7:00 PM;PHI,UTA,5:00 PM;NYR,VGK,10:00 PM;NSH,WPG,3:30 PM\n2027-03-14|ANA,CHI,4:30 PM;BUF,MIN,7:00 PM;VAN,OTT,5:00 PM;DET,PIT,2:00 PM\n2027-03-15|NYI,BOS,7:00 PM;SJS,BUF,7:00 PM;NSH,CGY,9:30 PM;EDM,COL,9:30 PM;STL,SEA,9:40 PM;FLA,TOR,7:30 PM;DAL,UTA,9:00 PM;WPG,VGK,10:00 PM;TBL,WSH,3:00 PM\n2027-03-16|CAR,ANA,10:30 PM;PIT,CBJ,7:00 PM;SJS,CHI,8:00 PM;WPG,LAK,10:00 PM;FLA,MTL,7:00 PM;OTT,NYR,7:00 PM;DET,PHI,7:00 PM\n2027-03-17|DAL,CGY,9:30 PM;MIN,COL,8:30 PM;TBL,TOR,7:30 PM;NSH,VAN,10:00 PM;SEA,VGK,10:00 PM;NYI,WSH,7:00 PM\n2027-03-18|UTA,ANA,10:00 PM;WSH,BUF,7:30 PM;CBJ,DET,7:00 PM;STL,EDM,9:00 PM;CAR,LAK,10:00 PM;TBL,MTL,7:00 PM;PIT,NJD,7:00 PM;TOR,NYR,7:00 PM;FLA,OTT,7:00 PM;BOS,PHI,7:00 PM;SJS,WPG,8:00 PM\n2027-03-19|CGY,MIN,8:00 PM;COL,SEA,10:00 PM;CHI,UTA,10:00 PM\n2027-03-20|VGK,ANA,10:30 PM;FLA,BUF,1:00 PM;MTL,DET,12:30 PM;DAL,EDM,3:30 PM;TOR,NJD,7:00 PM;BOS,NSH,5:00 PM;PHI,NYI,3:00 PM;PIT,NYR,8:00 PM;TBL,OTT,7:00 PM;CAR,SJS,10:30 PM;STL,VAN,10:00 PM;CBJ,WPG,7:00 PM\n2027-03-21|STL,CGY,8:00 PM;CHI,COL,5:00 PM;UTA,MIN,2:00 PM;BUF,NYI,3:00 PM;WSH,NYR,8:00 PM;LAK,SEA,8:00 PM;EDM,VAN,9:00 PM\n2027-03-22|SJS,ANA,10:00 PM;TOR,MTL,7:30 PM;CBJ,PIT,7:00 PM\n2027-03-23|BUF,BOS,7:00 PM;EDM,CGY,9:00 PM;UTA,COL,9:30 PM;CAR,DAL,8:00 PM;CHI,MIN,8:00 PM;PHI,NJD,7:00 PM;NYR,NSH,8:00 PM;VGK,SEA,9:40 PM;FLA,TBL,7:00 PM;LAK,VAN,10:00 PM;STL,WPG,8:00 PM;DET,WSH,7:00 PM\n2027-03-24|WSH,DET,7:30 PM;OTT,MTL,7:30 PM;ANA,SJS,10:00 PM\n2027-03-25|OTT,BOS,7:00 PM;TOR,BUF,7:00 PM;DAL,CAR,7:00 PM;CHI,CBJ,7:00 PM;LAK,CGY,9:00 PM;NYR,FLA,7:00 PM;EDM,MIN,9:00 PM;NJD,PIT,7:00 PM;ANA,SEA,9:40 PM;NYI,STL,8:00 PM;PHI,TBL,6:30 PM;VGK,VAN,10:00 PM;COL,WPG,8:00 PM\n2027-03-26|NSH,CHI,8:00 PM;SJS,UTA,9:00 PM;BOS,WSH,7:00 PM\n2027-03-27|STL,CBJ,7:00 PM;VGK,CGY,10:00 PM;WPG,COL,7:00 PM;NSH,DAL,8:00 PM;LAK,EDM,3:30 PM;PHI,FLA,6:00 PM;SEA,MIN,2:00 PM;NJD,MTL,7:00 PM;DET,NYI,7:30 PM;CAR,PIT,7:00 PM;NYR,TBL,7:00 PM;OTT,TOR,7:00 PM;ANA,VAN,4:00 PM\n2027-03-28|SEA,CHI,2:00 PM;DET,MTL,6:00 PM;BUF,STL,8:30 PM;WSH,TOR,7:00 PM\n2027-03-29|VAN,LAK,9:30 PM;CAR,NJD,7:00 PM;MIN,NYR,7:00 PM;COL,SJS,10:00 PM\n2027-03-30|COL,ANA,10:00 PM;MTL,BOS,7:00 PM;CGY,DAL,8:00 PM;OTT,DET,7:00 PM;CBJ,FLA,7:00 PM;BUF,NSH,8:00 PM;CAR,NYI,7:30 PM;PIT,PHI,7:00 PM;UTA,SEA,9:40 PM;TOR,TBL,7:00 PM;CHI,WSH,7:00 PM\n2027-03-31|SJS,EDM,8:30 PM;WPG,LAK,10:00 PM;MIN,NJD,7:30 PM;VAN,VGK,10:30 PM\n2027-04-01|BOS,BUF,7:00 PM;TOR,FLA,7:00 PM;NYR,MTL,7:00 PM;CHI,NSH,8:00 PM;WSH,PHI,7:30 PM;NYI,PIT,7:00 PM;CGY,STL,8:00 PM;CBJ,TBL,7:00 PM;ANA,UTA,9:00 PM\n2027-04-02|LAK,COL,9:00 PM;CAR,DET,7:00 PM;DAL,MIN,8:00 PM;OTT,NYI,7:00 PM;EDM,VGK,10:00 PM\n2027-04-03|EDM,ANA,10:00 PM;TBL,BOS,3:00 PM;NJD,CAR,5:00 PM;CHI,DAL,6:00 PM;STL,LAK,10:30 PM;CGY,NSH,3:30 PM;FLA,NYR,12:30 PM;PHI,PIT,8:00 PM;WPG,SEA,7:00 PM;BUF,TOR,7:00 PM;VGK,UTA,10:00 PM;SJS,VAN,10:00 PM;CBJ,WSH,5:00 PM\n2027-04-04|COL,MIN,2:00 PM;FLA,NJD,4:30 PM;MTL,NYI,7:30 PM;DET,OTT,3:00 PM;STL,SJS,9:30 PM;PIT,WSH,7:00 PM\n2027-04-05|TBL,BUF,7:00 PM;PHI,CAR,2:00 PM;SEA,DAL,8:00 PM;CGY,EDM,9:30 PM;BOS,TOR,7:00 PM;WPG,UTA,9:30 PM\n2027-04-06|LAK,ANA,10:15 PM;WSH,CBJ,7:45 PM;MTL,FLA,7:15 PM;CHI,MIN,8:00 PM;TBL,NJD,7:30 PM;SEA,NSH,8:00 PM;DET,NYI,7:30 PM;PIT,NYR,7:00 PM;COL,VAN,10:00 PM;STL,VGK,10:30 PM\n2027-04-07|BOS,BUF,7:30 PM;OTT,CAR,7:00 PM;DAL,UTA,9:00 PM;EDM,WPG,8:00 PM\n2027-04-08|PHI,CBJ,7:30 PM;COL,CGY,9:00 PM;NSH,CHI,8:00 PM;VGK,LAK,10:00 PM;NYI,NJD,7:00 PM;WSH,OTT,7:00 PM;MIN,SJS,10:00 PM;SEA,STL,8:00 PM;MTL,TBL,7:00 PM\n2027-04-09|UTA,DAL,8:00 PM;PIT,DET,7:00 PM;BOS,FLA,7:00 PM;VAN,WPG,7:00 PM\n2027-04-10|DET,BUF,6:00 PM;VAN,CGY,10:00 PM;SEA,CHI,6:00 PM;MIN,COL,3:00 PM;WPG,EDM,10:00 PM;CAR,FLA,6:00 PM;PIT,NJD,6:00 PM;DAL,NSH,7:00 PM;CBJ,NYI,5:00 PM;TOR,NYR,7:00 PM;MTL,OTT,7:00 PM;WSH,PHI,12:30 PM;ANA,SJS,4:00 PM;UTA,STL,7:00 PM;BOS,TBL,8:00 PM;LAK,VGK,10:30 PM";
+const SAMPLE_ROWS = PACKED_SCHEDULE.split('\n').flatMap(line => {
+  const [date, gamesStr] = line.split('|');
+  return gamesStr.split(';').map(g => [date, ...g.split(',')]);
+});
+
+
+const $ = id => document.getElementById(id);
+const esc = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const dayNumber = date => Math.floor(Date.parse(date + 'T00:00:00Z') / DAY);
+const isoDay = day => new Date(day * DAY).toISOString().slice(0, 10);
+const dateLabel = (date, opts = {month: 'short', day: 'numeric'}) => new Intl.DateTimeFormat('en-US', {...opts, timeZone: 'UTC'}).format(new Date(date + 'T12:00:00Z'));
+const dateRange = (start, end) => dateLabel(start, {month: 'short', day: 'numeric', year: 'numeric'}) + ' – ' + dateLabel(end, {month: 'short', day: 'numeric', year: 'numeric'});
+
+
+const distanceCache = new Map();
+function haversineCoords(lat1, lon1, lat2, lon2) {
+  const r = Math.PI / 180;
+  const h = Math.sin((lat2 - lat1) * r / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin((lon2 - lon1) * r / 2) ** 2;
+  return 3958.7613 * 2 * Math.asin(Math.sqrt(Math.min(1, Math.max(0, h))));
+}
+function haversine(a, b) {
+  if (a === b) return 0;
+  const key = [a, b].sort().join(':');
+  if (distanceCache.has(key)) return distanceCache.get(key);
+  const A = TEAM[a], B = TEAM[b];
+  const d = haversineCoords(A.lat, A.lon, B.lat, B.lon);
+  distanceCache.set(key, d);
+  return d;
+}
+
+
+// Estimate realistic travel time & mode between two arenas
+const AMTRAK_NE = new Set(['BOS', 'NYR', 'NYI', 'NJD', 'PHI', 'WSH']);
+const VIA_RAIL = new Set(['TOR', 'OTT', 'MTL', 'BUF', 'DET']);
+function formatLegTransit(fromAbbr, toAbbr, straightMiles) {
+  if (fromAbbr === toAbbr) return {mode: '🏟️ Same Arena', time: '0m travel', detail: 'Stay in ' + TEAM[fromAbbr].city};
+  if (straightMiles < 22) {
+    return {mode: '🚇 Metro / Transit', time: '~30m train', detail: Math.round(straightMiles) + ' mi (' + fromAbbr + ' → ' + toAbbr + ')'};
+  }
+  const roadMiles = Math.round(straightMiles * 1.22);
+  const driveHours = roadMiles / 58;
+  const h = Math.floor(driveHours);
+  const m = Math.round((driveHours - h) * 60);
+  const timeStr = (h > 0 ? h + 'h ' : '') + m + 'm';
+  if (AMTRAK_NE.has(fromAbbr) && AMTRAK_NE.has(toAbbr) && straightMiles <= 230) {
+    return {mode: '🚆 Amtrak / Drive', time: '~' + timeStr, detail: straightMiles.toFixed(0) + ' mi (' + roadMiles + ' road mi)'};
+  }
+  if (VIA_RAIL.has(fromAbbr) && VIA_RAIL.has(toAbbr) && straightMiles <= 250) {
+    return {mode: '🚆 Rail / Hwy', time: '~' + timeStr, detail: straightMiles.toFixed(0) + ' mi (' + roadMiles + ' road mi)'};
+  }
+  if (straightMiles <= 320) {
+    return {mode: '🚗 Highway Drive', time: '~' + timeStr, detail: straightMiles.toFixed(0) + ' mi (~' + roadMiles + ' road mi)'};
+  }
+  return {mode: '✈️ Short Hop / Drive', time: '~' + timeStr + ' drive', detail: straightMiles.toFixed(0) + ' mi'};
+}
+
+
+function formatLocalTime(timeET, homeAbbr) {
+  if (!timeET) return '7:00 PM ET';
+  if (timeET.includes('AM') || timeET.includes('PM')) return timeET + ' ET';
+  const [hh, mm] = timeET.split(':').map(Number);
+  const suffix = hh >= 12 ? 'PM' : 'AM';
+  const h12 = hh % 12 || 12;
+  return h12 + ':' + String(mm).padStart(2, '0') + ' ' + suffix + ' ET';
+}
+
+
+function normalizeSchedule(input) {
+  if (input && Array.isArray(input.teams)) {
+    input.teams.forEach(customTeam => {
+      if (customTeam && customTeam.abbr && typeof customTeam.lat === 'number' && typeof customTeam.lon === 'number') {
+        const abbr = String(customTeam.abbr).toUpperCase();
+        const merged = {
+          abbr,
+          name: customTeam.name || abbr,
+          city: customTeam.city || '',
+          arena: customTeam.arena || customTeam.venue || 'Stadium',
+          airport: customTeam.airport || 'HUB',
+          tz: customTeam.tz || 'ET',
+          division: customTeam.division || customTeam.conference || 'Custom',
+          lat: customTeam.lat,
+          lon: customTeam.lon,
+          color: customTeam.color || '#041e42',
+          league: customTeam.league || 'NHL',
+          level: customTeam.level || 'PRO',
+          sport: customTeam.sport || 'Hockey'
+        };
+        if (!TEAM[abbr]) TEAMS.push(merged);
+        TEAM[abbr] = merged;
+      }
+    });
+  }
+  let rows = Array.isArray(input) ? input : input && Array.isArray(input.games) ? input.games : input && Array.isArray(input.gameWeek) ? input.gameWeek.flatMap(w => w.games || []) : null;
+  if (!rows || !rows.length) throw new Error('No games found in schedule data.');
+  const unique = new Map();
+  rows.forEach((row, i) => {
+    const isArr = Array.isArray(row);
+    const date = isArr ? row[0] : (row.date || row.gameDate);
+    const away = String(isArr ? row[1] : (row.away || row.awayTeam?.abbrev || '')).toUpperCase();
+    const home = String(isArr ? row[2] : (row.home || row.homeTeam?.abbrev || '')).toUpperCase();
+    const localTime = isArr ? (row[3] || '7:00 PM') : (row.localTime || row.timeET || '7:00 PM');
+    const note = isArr ? (row[4] || '') : (row.note || '');
+    const league = isArr ? 'NHL' : String(row.league || TEAM[home]?.league || 'NHL').toUpperCase();
+    const level = isArr ? 'PRO' : String(row.level || TEAM[home]?.level || (league.startsWith('NCAA') ? 'COLLEGE' : 'PRO')).toUpperCase();
+    const sport = isArr ? 'Hockey' : String(row.sport || TEAM[home]?.sport || 'Hockey');
+    const isOverseas = note.includes('Helsinki') || note.includes('Düsseldorf');
+    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    if (!TEAM[away] || !TEAM[home] || away === home) return;
+    const startTimeUTC = (!isArr && row.startTimeUTC) ? row.startTimeUTC : null;
+    const dNum = dayNumber(date);
+    const wd = new Date(date + 'T12:00:00Z').getUTCDay(); // 0=Sun, 5=Fri, 6=Sat
+    const isWeekend = (wd === 0 || wd === 5 || wd === 6);
+    const key = date + ':' + league + ':' + away + ':' + home;
+    unique.set(key, {id: key, date, day: dNum, away, home, localTime, note, league, level, sport, isOverseas, startTimeUTC, isWeekend});
+  });
+  return [...unique.values()].sort((a, b) => a.day - b.day || a.id.localeCompare(b.id));
+}
+
+
+// App State
+let schedule = [];
+let source = 'sample';
+let selected = new Set(['NYR', 'NJD', 'PHI']);
+let division = 'All';
+let searchQuery = '';
+let mapRegion = 'AUTO';
+let trips = [];
+let activeTripIndex = 0;
+let pinnedKeys = new Set();
+let visible = 8;
+let renderTimer, toastTimer;
+
+
+function notify(message) {
+  $('toast').textContent = message;
+  $('toast').hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toast').hidden = true, 4200);
+}
+
+
+function renderTeams() {
+  $('division-tabs').innerHTML = ['All', 'Atlantic', 'Metropolitan', 'Central', 'Pacific']
+    .map(d => `<button class="tab" type="button" data-division="${d}" aria-pressed="${d === division}">${d}</button>`).join('');
+
+
+  const q = searchQuery.trim().toLowerCase();
+  const filteredTeams = TEAMS.filter(t => {
+    if (division !== 'All' && t.division !== division) return false;
+    if (q && !(t.name.toLowerCase().includes(q) || t.city.toLowerCase().includes(q) || t.abbr.toLowerCase().includes(q) || t.arena.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+
+  $('team-grid').innerHTML = filteredTeams.map(t => {
+    const shortName = t.name.replace(t.abbr === 'NYR' || t.abbr === 'NYI' ? 'New York ' : t.abbr === 'NJD' ? 'New Jersey ' : '', '');
+    return `<button type="button" class="team" data-team="${t.abbr}" aria-pressed="${selected.has(t.abbr)}" title="${esc(t.name + ' · ' + t.arena + ' (' + t.airport + ')')}">
+      <span class="crest" style="--team-color:${t.color}">${t.abbr}</span>
+      <span>
+        <span class="team-name">${esc(shortName)}</span>
+        <span class="team-city">${esc(t.city)} · ✈️ ${t.airport}</span>
+      </span>
+    </button>`;
+  }).join('');
+
+
+  $('team-counter').textContent = `${selected.size} / 3`;
+  $('selected-teams').innerHTML = selected.size
+    ? [...selected].map(abbr => `<button class="pill" type="button" data-remove="${abbr}" aria-label="Remove ${esc(TEAM[abbr].name)}">${abbr} · ${esc(TEAM[abbr].city.split(',')[0])} <span aria-hidden="true">×</span></button>`).join('')
+    : '<span class="hint" style="margin:0">Pick 1 to 3 teams above to start planning.</span>';
+  $('find-button').disabled = !selected.size;
+}
+
+
+function populateMonths() {
+  const previous = $('month').value;
+  const months = [...new Set(schedule.map(g => g.date.slice(0, 7)))].sort();
+  $('month').innerHTML = '<option value="all">Full season (Oct – Apr)</option>' +
+    months.map(m => `<option value="${m}">${dateLabel(m + '-01', {month: 'long', year: 'numeric'})}</option>`).join('');
+  if (months.includes(previous)) $('month').value = previous;
+}
+
+
+function controls() {
+  const [minDays, maxDays] = $('window').value.split(',').map(Number);
+  return {
+    minDays,
+    maxDays,
+    maxLeg: Number($('distance').value),
+    all: $('coverage').checked,
+    dedupe: $('dedupe').checked,
+    weekendOnly: $('weekend-only').checked,
+    origin: $('origin').value,
+    sortBy: $('sort-select').value,
+    month: $('month').value,
+    teams: [...selected]
+  };
+}
+
+
+// Dynamic Programming Subsequence Route Solver + Smart Sub-Trip Pruning
+function findTrips(games, c) {
+  if (!c.teams.length) return [];
+  const bit = Object.fromEntries(c.teams.map((t, i) => [t, 1 << i]));
+  const full = (1 << c.teams.length) - 1;
+
+
+  const filtered = games
+    .filter(g => !g.isOverseas && (bit[g.away] || bit[g.home]) && (c.month === 'all' || g.date.startsWith(c.month)))
+    .map(g => {
+      const mask = (bit[g.away] || 0) | (bit[g.home] || 0);
+      const isH2H = Boolean(bit[g.away] && bit[g.home]);
+      return {...g, mask, isH2H};
+    });
+
+
+  const output = new Map();
+  const coverageCount = mask => { let n = 0; while (mask) { n += mask & 1; mask >>= 1; } return n; };
+
+
+  for (let start = 0; start < filtered.length; start++) {
+    const first = filtered[start];
+    const states = new Map([[start, new Map([[first.mask, {path: [first], miles: 0, mask: first.mask, h2hCount: first.isH2H ? 1 : 0}]])]]);
+
+
+    for (let end = start + 1; end < filtered.length && filtered[end].day - first.day < c.maxDays; end++) {
+      const current = filtered[end];
+      if (current.day === first.day) continue;
+      const bestByMask = new Map();
+
+
+      for (const [lastIndex, byMask] of states) {
+        const last = filtered[lastIndex];
+        if (last.day >= current.day) continue;
+        const leg = haversine(last.home, current.home);
+        if (leg > c.maxLeg) continue;
+
+
+        for (const prior of byMask.values()) {
+          const mask = prior.mask | current.mask;
+          const candidate = {
+            path: [...prior.path, current],
+            miles: prior.miles + leg,
+            mask,
+            h2hCount: prior.h2hCount + (current.isH2H ? 1 : 0)
+          };
+          const best = bestByMask.get(mask);
+          if (!best || candidate.path.length > best.path.length || (candidate.path.length === best.path.length && candidate.miles < best.miles)) {
+            bestByMask.set(mask, candidate);
+          }
+        }
+      }
+
+
+      if (bestByMask.size) states.set(end, bestByMask);
+      const days = current.day - first.day + 1;
+      if (days < c.minDays) continue;
+
+
+      for (const candidate of bestByMask.values()) {
+        if (c.all && candidate.mask !== full) continue;
+        const weekendGames = candidate.path.filter(g => g.isWeekend).length;
+        if (c.weekendOnly && weekendGames < Math.ceil(candidate.path.length / 2)) continue;
+
+
+        const coverage = coverageCount(candidate.mask);
+        const key = candidate.path.map(g => g.id).join('|');
+        const legs = candidate.path.slice(1).map((g, i) => haversine(candidate.path[i].home, g.home));
+
+
+        // Origin hub distance bonus if user picked a crew meeting region
+        let hubPenalty = 0;
+        if (c.origin !== 'any' && HUB_COORDS[c.origin]) {
+          const hub = HUB_COORDS[c.origin];
+          const firstArena = TEAM[candidate.path[0].home];
+          hubPenalty = haversineCoords(hub.lat, hub.lon, firstArena.lat, firstArena.lon) * 0.08;
+        }
+
+
+        // Composite Fit Score: prioritizes coverage, head-to-head games, total games, and low mileage
+        const fitScore = (coverage * 1000) + (candidate.path.length * 180) + (candidate.h2hCount * 95) + (weekendGames * 20) - (candidate.miles * 0.45) - hubPenalty;
+
+
+        output.set(key, {
+          ...candidate,
+          key,
+          coverage,
+          days,
+          weekendGames,
+          start: first.date,
+          end: current.date,
+          selectedTeams: c.teams.filter(t => candidate.mask & bit[t]),
+          legs,
+          requestedTeams: c.teams.slice(),
+          fitScore,
+          source
+        });
+      }
+    }
+  }
+
+
+  let list = [...output.values()];
+
+
+  // Deduplicate dominated sub-trips (e.g., if Trip A has [G1, G2, G3] and Trip B has [G1, G3] with same coverage, hide Trip B)
+  if (c.dedupe && list.length > 1) {
+    list.sort((a, b) => b.path.length - a.path.length || a.miles - b.miles);
+    const kept = [];
+    for (const item of list) {
+      const itemIds = new Set(item.path.map(g => g.id));
+      const isDominated = kept.some(bigger => {
+        if (bigger.path.length <= item.path.length) return false;
+        if (bigger.coverage < item.coverage) return false;
+        return item.path.every(g => bigger.path.some(bg => bg.id === g.id));
+      });
+      if (!isDominated) kept.push(item);
+    }
+    list = kept;
+  }
+
+
+  // Sort according to user preference
+  if (c.sortBy === 'miles') {
+    list.sort((a, b) => a.miles - b.miles || b.coverage - a.coverage || b.path.length - a.path.length);
+  } else if (c.sortBy === 'games') {
+    list.sort((a, b) => b.path.length - a.path.length || b.coverage - a.coverage || a.miles - b.miles);
+  } else if (c.sortBy === 'date') {
+    list.sort((a, b) => a.start.localeCompare(b.start) || b.fitScore - a.fitScore);
+  } else {
+    list.sort((a, b) => b.fitScore - a.fitScore || a.start.localeCompare(b.start));
+  }
+
+
+  return list;
+}
+
+
+// Interactive SVG Map Projection & Rendering
+const REGION_BOXES = {
+  ALL:  {lonMin: -126, lonMax: -68, latMin: 24, latMax: 55.5},
+  NE:   {lonMin: -81.0, lonMax: -70.0, latMin: 38.0, latMax: 46.2},
+  MW:   {lonMin: -98.5, lonMax: -77.5, latMin: 35.0, latMax: 51.0},
+  WEST: {lonMin: -124.0, lonMax: -103.0, latMin: 31.5, latMax: 42.5},
+  NW:   {lonMin: -125.5, lonMax: -111.0, latMin: 45.5, latMax: 55.0}
+};
+
+
+// Metro cluster visual de-collision offsets (in screen pixels) so NYR/NJD/NYI and LAK/ANA never overlap
+const METRO_NUDGE = {
+  NJD: [-18, 6],
+  NYR: [0, -10],
+  NYI: [18, 6],
+  LAK: [-12, -7],
+  ANA: [12, 8]
+};
+
+
+// Simplified North America coastline polygon (lat, lon) for geographic context
+const NA_COASTLINE = [
+  [48.5,-124.7],[49.3,-123.2],[54.5,-130.0],[56.0,-110.0],[55.0,-82.0],[52.0,-79.0],[51.0,-66.0],
+  [47.0,-67.5],[44.8,-66.9],[43.6,-70.2],[42.3,-70.9],[41.2,-71.9],[40.5,-74.0],[38.9,-74.9],
+  [36.8,-75.9],[35.2,-75.5],[32.0,-80.8],[28.5,-80.6],[25.2,-80.3],[26.0,-81.8],[28.0,-82.8],
+  [30.0,-85.5],[29.2,-89.5],[29.0,-95.0],[26.0,-97.2],[31.8,-106.5],[32.5,-117.1],[34.0,-118.5],
+  [37.8,-122.5],[42.0,-124.3],[46.2,-124.0],[48.5,-124.7]
+];
+
+
+function computeAutoBox(activeTrip) {
+  if (!activeTrip || !activeTrip.path.length) return REGION_BOXES.ALL;
+  const lats = activeTrip.path.map(g => TEAM[g.home].lat);
+  const lons = activeTrip.path.map(g => TEAM[g.home].lon);
+  let minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  let minLon = Math.min(...lons), maxLon = Math.max(...lons);
+  const latSpan = Math.max(3.6, (maxLat - minLat) * 1.9);
+  const lonSpan = Math.max(6.8, (maxLon - minLon) * 2.1);
+  const cLat = (minLat + maxLat) / 2;
+  const cLon = (minLon + maxLon) / 2;
+  return {
+    latMin: cLat - latSpan / 2,
+    latMax: cLat + latSpan / 2,
+    lonMin: cLon - lonSpan / 2,
+    lonMax: cLon + lonSpan / 2
+  };
+}
+
+
+function projectPoint(lat, lon, box, abbr = null) {
+  const W = 860, H = 320, padX = 56, padY = 38;
+  let x = padX + ((lon - box.lonMin) / (box.lonMax - box.lonMin)) * (W - padX * 2);
+  let y = H - padY - ((lat - box.latMin) / (box.latMax - box.latMin)) * (H - padY * 2);
+  if (abbr && METRO_NUDGE[abbr]) {
+    x += METRO_NUDGE[abbr][0];
+    y += METRO_NUDGE[abbr][1];
+  }
+  return [x, y];
+}
+
+
+function renderArenaMap() {
+  const svg = $('arena-map');
+  const activeTrip = trips[activeTripIndex] || null;
+  const box = mapRegion === 'AUTO' ? computeAutoBox(activeTrip) : (REGION_BOXES[mapRegion] || REGION_BOXES.ALL);
+
+
+  // Landmass backdrop polygon
+  const landPts = NA_COASTLINE.map(([lat, lon]) => {
+    const [x, y] = projectPoint(lat, lon, box);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const landPoly = `<polygon points="${landPts}" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" opacity="0.88"/>`;
+
+
+  // Stylized North American graticule lines for geographic context
+  let gridLines = '';
+  const lonStep = (box.lonMax - box.lonMin) > 20 ? 10 : 2;
+  const latStep = (box.latMax - box.latMin) > 12 ? 5 : 1.5;
+  for (let lon = Math.ceil(box.lonMin / lonStep) * lonStep; lon <= box.lonMax; lon += lonStep) {
+    const [x1, y1] = projectPoint(box.latMin, lon, box);
+    const [x2, y2] = projectPoint(box.latMax, lon, box);
+    gridLines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#cbd5e1" stroke-dasharray="3 5" stroke-width="1" opacity="0.45"/>`;
+  }
+  for (let lat = Math.ceil(box.latMin / latStep) * latStep; lat <= box.latMax; lat += latStep) {
+    const [x1, y1] = projectPoint(lat, box.lonMin, box);
+    const [x2, y2] = projectPoint(lat, box.lonMax, box);
+    gridLines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#cbd5e1" stroke-dasharray="3 5" stroke-width="1" opacity="0.45"/>`;
+  }
+
+
+  // Plot all 32 NHL arenas
+  const stopSet = new Set(activeTrip ? activeTrip.path.map(g => g.home) : []);
+  let arenaNodes = '';
+
+
+  TEAMS.forEach(t => {
+    const [x, y] = projectPoint(t.lat, t.lon, box, t.abbr);
+    if (x < -30 || x > 890 || y < -30 || y > 350) return;
+    const isCrew = selected.has(t.abbr);
+    const isStop = stopSet.has(t.abbr);
+    const r = isStop ? 8.5 : isCrew ? 6.5 : 4.5;
+    const fill = isStop ? '#c8102e' : isCrew ? '#041e42' : '#94a3b8';
+    const stroke = isStop || isCrew ? '#ffffff' : 'none';
+    const labelOpacity = (isStop || isCrew || mapRegion !== 'ALL') ? '1' : '0.7';
+    const labelYOffset = (t.abbr === 'NYR') ? -11 : 4;
+    const labelXOffset = (t.abbr === 'NJD') ? -28 : 10;
+
+
+    arenaNodes += `<g class="map-arena" data-arena="${t.abbr}" style="cursor:pointer">
+      <title>${esc(t.name + ' — ' + t.arena + ' (' + t.city + ')')}</title>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
+      <text x="${(x + labelXOffset).toFixed(1)}" y="${(y + labelYOffset).toFixed(1)}" font-size="${isStop || isCrew ? '10.5' : '9.5'}" font-weight="${isStop || isCrew ? '800' : '650'}" fill="${isStop ? '#991b1b' : '#0f2137'}" opacity="${labelOpacity}">${t.abbr}</text>
+    </g>`;
+  });
+
+
+  // Draw active trip route legs and grouped stop badges per arena
+  let routePaths = '';
+  let stopBadges = '';
+  if (activeTrip) {
+    for (let i = 0; i < activeTrip.path.length - 1; i++) {
+      const aAbbr = activeTrip.path[i].home;
+      const bAbbr = activeTrip.path[i + 1].home;
+      if (aAbbr === bAbbr) continue;
+      const A = TEAM[aAbbr];
+      const B = TEAM[bAbbr];
+      const [x1, y1] = projectPoint(A.lat, A.lon, box, aAbbr);
+      const [x2, y2] = projectPoint(B.lat, B.lon, box, bAbbr);
+      const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2 - 16;
+      const legMi = activeTrip.legs[i];
+
+
+      routePaths += `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="#c8102e" stroke-width="2.8" stroke-dasharray="6 4"/>`;
+      if (legMi >= 15) {
+        routePaths += `<g transform="translate(${mx.toFixed(1)}, ${(my + 2).toFixed(1)})">
+          <rect x="-23" y="-8" width="46" height="15" rx="4" fill="#041e42" opacity="0.92"/>
+          <text x="0" y="2.5" text-anchor="middle" fill="#ffffff" font-size="9" font-weight="750">${legMi.toFixed(0)} mi</text>
+        </g>`;
+      }
+    }
+
+
+    // Group stop numbers by arena so visiting NJD on Game 1 & Game 4 shows "1,4" cleanly on one badge!
+    const stopsByArena = new Map();
+    activeTrip.path.forEach((g, idx) => {
+      if (!stopsByArena.has(g.home)) stopsByArena.set(g.home, []);
+      stopsByArena.get(g.home).push(idx + 1);
+    });
+
+
+    for (const [abbr, nums] of stopsByArena.entries()) {
+      const A = TEAM[abbr];
+      const [x, y] = projectPoint(A.lat, A.lon, box, abbr);
+      const label = nums.join(',');
+      const w = Math.max(19, label.length * 7 + 8);
+      stopBadges += `<g transform="translate(${x.toFixed(1)}, ${(y - 16).toFixed(1)})">
+        <rect x="${(-w / 2).toFixed(1)}" y="-9.5" width="${w}" height="18" rx="9" fill="#c8102e" stroke="#ffffff" stroke-width="2"/>
+        <text x="0" y="3" text-anchor="middle" fill="#ffffff" font-size="9.5" font-weight="800">${label}</text>
+      </g>`;
+    }
+
+
+    const firstHome = TEAM[activeTrip.path[0].home];
+    const lastHome = TEAM[activeTrip.path[activeTrip.path.length - 1].home];
+    $('map-route-title').textContent = `🗺️ Active Route #${activeTripIndex + 1}: ${dateRange(activeTrip.start, activeTrip.end)}`;
+    $('map-route-sub').textContent = `${activeTrip.path.map(g => g.home + ' (' + dateLabel(g.date) + ')').join(' → ')} · ${activeTrip.miles.toFixed(1)} total miles`;
+    $('map-flight-summary').innerHTML = `✈️ <strong>Fly into:</strong> ${firstHome.airport} (${firstHome.city}) · <strong>Fly out of:</strong> ${lastHome.airport} (${lastHome.city})`;
+  } else {
+    $('map-route-title').textContent = '🗺️ Interactive NHL Arena & Route Map';
+    $('map-route-sub').textContent = 'Select teams to see matching routes plotted across North America.';
+    $('map-flight-summary').textContent = 'No active route selected';
+  }
+
+
+  svg.innerHTML = landPoly + gridLines + routePaths + arenaNodes + stopBadges;
+}
+
+
+function matchupHTML(g) {
+  const awaySpan = `<span class="${selected.has(g.away) ? 'selected-team' : ''}" title="${esc(TEAM[g.away].name)}">${g.away}</span>`;
+  const homeSpan = `<span class="${selected.has(g.home) ? 'selected-team' : ''}" title="${esc(TEAM[g.home].name)}">${g.home}</span>`;
+  const h2hBadge = g.isH2H ? `<span class="h2h-pill" title="Two of your crew's selected teams play each other!">🔥 H2H</span>` : '';
+  return `${awaySpan} <span style="color:var(--muted);font-weight:400">@</span> ${homeSpan}${h2hBadge}`;
+}
+
+
+function tripCard(t, i) {
+  const all = t.coverage === t.requestedTeams.length;
+  const corridor = t.legs.every(d => d < 150);
+  const isPinned = pinnedKeys.has(t.key);
+  const isActiveMap = i === activeTripIndex;
+  const firstAirport = TEAM[t.path[0].home].airport;
+  const lastAirport = TEAM[t.path[t.path.length - 1].home].airport;
+
+
+  return `<article class="trip ${isActiveMap ? 'active-map' : ''}" data-trip-index="${i}">
+    ${i === 0 ? `<div class="best-label"><span>★ TOP RECOMMENDED CREW ROAD TRIP</span><span>Fit Score: ${Math.round(t.fitScore)}</span></div>` : ''}
+    <div class="trip-head">
+      <div>
+        <h3 class="trip-title">${esc(dateRange(t.start, t.end))}</h3>
+        <p class="trip-sub">${t.days} days <span class="dot">·</span> ${t.path.length} games <span class="dot">·</span> ${t.miles.toFixed(1)} straight-line mi (~${Math.round(t.miles * 1.22)} road mi)</p>
+      </div>
+      <div class="rank-group">
+        <button type="button" class="btn" data-map-focus="${i}" title="Plot this trip on the interactive map">🗺️ Map Route</button>
+        <button type="button" class="btn ${isPinned ? 'active-pin' : ''}" data-pin="${i}">${isPinned ? '📌 Pinned' : '📌 Compare'}</button>
+        <span class="rank">#${i + 1}</span>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge ${all ? 'green' : 'red'}">${all ? `All ${t.coverage} crew ${t.coverage === 1 ? 'team' : 'teams'} included!` : `${t.coverage} of ${t.requestedTeams.length} crew teams`}</span>
+      ${t.h2hCount > 0 ? `<span class="badge amber">🔥 ${t.h2hCount} Head-to-Head ${t.h2hCount > 1 ? 'Games' : 'Game'} (2 Crew Teams in 1 Ticket!)</span>` : ''}
+      ${corridor ? '<span class="badge green">🚆 Easy Train/Drive Corridor (&lt;150 mi/leg)</span>' : ''}
+      ${t.weekendGames >= 2 ? `<span class="badge purple">🍻 Weekend Friendly (${t.weekendGames} Fri–Sun games)</span>` : ''}
+      <span class="badge">Teams: ${t.selectedTeams.join(' + ')}</span>
+    </div>
+    <div class="route">
+      <div class="route-chain">
+        ${t.path.map((g, j) => {
+          const legInfo = j ? formatLegTransit(t.path[j - 1].home, g.home, t.legs[j - 1]) : null;
+          return (j ? `<span class="route-leg">→ ${legInfo.mode} (${legInfo.time}) →</span>` : '') + `<span class="route-stop">${j + 1}. ${g.home}</span>`;
+        }).join('')}
+      </div>
+      <span class="airport-hint">✈️ Hubs: ${firstAirport} → ${lastAirport}</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption class="sr-only">Games for ${esc(dateRange(t.start, t.end))}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Date &amp; Day</th>
+            <th scope="col">Matchup &amp; Puck Drop</th>
+            <th scope="col">Arena &amp; Airport</th>
+            <th scope="col" class="mile">Travel Leg &amp; Est. Transit</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${t.path.map((g, j) => {
+            const transit = j ? formatLegTransit(t.path[j - 1].home, g.home, t.legs[j - 1]) : null;
+            return `<tr>
+              <td><strong>${dateLabel(g.date)}</strong><small>${dateLabel(g.date, {weekday: 'long'})}${g.isWeekend ? ' · Weekend' : ''}</small></td>
+              <td class="matchup">${matchupHTML(g)}<small>🕖 ${esc(formatLocalTime(g.localTime, g.home))}</small></td>
+              <td>${esc(TEAM[g.home].arena)}<small>${esc(TEAM[g.home].city)} · ✈️ ${TEAM[g.home].airport}</small></td>
+              <td class="mile">
+                <strong>${j ? transit.mode + ' · ' + transit.time : '🏁 Start of Trip'}</strong>
+                <small>${j ? transit.detail + ' from ' + t.path[j - 1].home : 'Fly into ' + TEAM[g.home].airport}</small>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="trip-footer">
+      <p>Click "Map Route" to highlight stops ①–${t.path.length} above · Export to Calendar or Group Chat</p>
+      <div class="trip-actions">
+        <button type="button" class="btn share-accent" data-share-trip="${i}" title="Copy direct link to this road trip">🔗 Share Link</button>
+        <button type="button" class="btn" data-sms-trip="${i}" title="Text this road trip via SMS / iMessage">💬 Text</button>
+        <button type="button" class="btn" data-email-trip="${i}" title="Email this road trip to a coworker or friend">✉️ Email</button>
+        <button type="button" class="btn" data-ics="${i}">📅 Download .ics Calendar</button>
+        <button type="button" class="btn copy" data-copy="${i}">📋 Copy Itinerary</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+
+function renderCompareDrawer() {
+  const drawer = $('compare-drawer');
+  const pinnedTrips = trips.filter(t => pinnedKeys.has(t.key));
+  $('compare-count').textContent = pinnedTrips.length;
+  if (!pinnedTrips.length) {
+    drawer.hidden = true;
+    return;
+  }
+  drawer.hidden = false;
+  $('compare-grid').innerHTML = pinnedTrips.map((t, idx) => {
+    const firstAir = TEAM[t.path[0].home].airport;
+    const lastAir = TEAM[t.path[t.path.length - 1].home].airport;
+    const weekdayGames = t.path.length - t.weekendGames;
+    return `<div class="compare-col">
+      <h4>Option ${String.fromCharCode(65 + idx)}: ${esc(dateRange(t.start, t.end))}</h4>
+      <div class="compare-row"><span>Duration &amp; Games:</span><strong>${t.days}d · ${t.path.length} games</strong></div>
+      <div class="compare-row"><span>Crew Teams Seen:</span><strong>${t.selectedTeams.join(', ')} (${t.coverage}/${selected.size})</strong></div>
+      <div class="compare-row"><span>Head-to-Head Games:</span><strong>${t.h2hCount}</strong></div>
+      <div class="compare-row"><span>Total Travel:</span><strong>${t.miles.toFixed(0)} mi (~${Math.round(t.miles * 1.22)} road mi)</strong></div>
+      <div class="compare-row"><span>Weekend vs Weekday:</span><strong>${t.weekendGames} wknd / ${weekdayGames} wkday</strong></div>
+      <div class="compare-row"><span>Airports:</span><strong>${firstAir} → ${lastAir}</strong></div>
+      <div style="margin-top:6px;font-size:10.5px;color:var(--muted)">${t.path.map(g => `${dateLabel(g.date)}: ${g.away}@${g.home}`).join(' · ')}</div>
+    </div>`;
+  }).join('');
+}
+
+
+function renderResults() {
+  $('trip-count').textContent = trips.length.toLocaleString();
+  $('best-coverage').textContent = trips.length ? `${trips[0].coverage} / ${selected.size} teams` : '—';
+  $('best-distance').textContent = trips.length ? `${trips[0].miles.toFixed(0)} mi` : '—';
+  const h2hTrips = trips.filter(t => t.h2hCount > 0).length;
+  $('h2h-count').textContent = trips.length ? h2hTrips.toLocaleString() : '—';
+
+
+  if (activeTripIndex >= trips.length) activeTripIndex = 0;
+
+
+  $('results-description').innerHTML = fallbackNote
+    ? `<span style="color:var(--amber);font-weight:700">⚡ Auto-expanded search:</span> ${esc(fallbackNote)}`
+    : 'Ranked by team coverage, head-to-head matchups, game density, and lowest travel time.';
+  $('results').innerHTML = trips.length
+    ? trips.slice(0, visible).map(tripCard).join('')
+    : `<div class="empty">
+        <div class="empty-icon" aria-hidden="true">🏒</div>
+        <h3>${selected.size ? 'No road trips match those exact constraints' : 'Pick your crew’s teams to start'}</h3>
+        <p>${selected.size ? 'Try increasing the Max Travel Distance slider, switching to a 3–5 or 4–6 day window, or unchecking "Must include all selected teams."' : 'Select up to 3 NHL teams on the left or click one of the Quick Crew Presets at the top.'}</p>
+      </div>`;
+
+
+  $('more-results').hidden = visible >= trips.length;
+  $('more-results').textContent = `Show ${Math.min(8, trips.length - visible)} more road trips`;
+  $('results').setAttribute('aria-busy', 'false');
+
+
+  renderCompareDrawer();
+  renderArenaMap();
+  syncUrlHashSilently();
+}
+
+
+let fallbackNote = '';
+function queueSearch() {
+  clearTimeout(renderTimer);
+  $('results').setAttribute('aria-busy', 'true');
+  renderTimer = setTimeout(() => {
+    const c = controls();
+    fallbackNote = '';
+    trips = findTrips(schedule, c);
+
+
+    // If strict constraints return 0 trips when 2+ teams are selected, automatically run progressive relaxation
+    // so the user never hits a dead-end screen when picking cross-country team combinations!
+    if (trips.length === 0 && c.teams.length >= 2) {
+      // Tier 1: Keep all selected teams required, widen leg radius up to 600 mi and window up to 6 days
+      const tier1 = findTrips(schedule, {...c, maxLeg: Math.max(c.maxLeg, 600), maxDays: Math.max(c.maxDays, 6), weekendOnly: false});
+      if (tier1.length > 0) {
+        trips = tier1;
+        fallbackNote = `No trips fit inside ${c.maxLeg} mi/leg for all ${c.teams.length} teams — automatically showing the closest ${tier1.length} all-team road trips (up to 600 mi/leg, 6 days).`;
+      } else {
+        // Tier 2: Allow 2-of-3 team trips within the user's leg distance, plus wider 2-of-3 trips
+        const tier2 = findTrips(schedule, {...c, all: false, weekendOnly: false});
+        if (tier2.length > 0) {
+          trips = tier2;
+          fallbackNote = `Your ${c.teams.length} teams don't all converge within ${c.maxLeg} mi in the same week — showing the best ${tier2.length} partial-crew trips (2 of ${c.teams.length} teams) within ${c.maxLeg} mi/leg.`;
+        } else {
+          const tier3 = findTrips(schedule, {...c, all: false, maxLeg: 600, maxDays: 6, month: 'all', weekendOnly: false});
+          trips = tier3;
+          if (tier3.length > 0) {
+            fallbackNote = `Showing closest available multi-game stretches across the season for your selected teams.`;
+          }
+        }
+      }
+    }
+
+
+    visible = 8;
+    activeTripIndex = 0;
+    renderResults();
+  }, 40);
+}
+
+
+function updateSource() {
+  const range = schedule.length ? dateRange(schedule[0].date, schedule[schedule.length - 1].date) : '';
+  const uniqueDates = new Set(schedule.map(g => g.date)).size;
+  $('source-label').innerHTML = source === 'sample'
+    ? `<strong>Official 2026–27 NHL Regular Season (84 GP/team)</strong> · ${schedule.length.toLocaleString()} games across ${uniqueDates} dates (${esc(range)}) with official Eastern Time puck-drop times (excludes 4 overseas Global Series games in Finland/Germany from North American driving routes).`
+    : `<strong>${esc(source === 'live' ? 'Live NHL API Schedule' : 'Custom Imported Schedule')}</strong> · ${schedule.length.toLocaleString()} games across ${uniqueDates} dates (${esc(range)}).`;
+  $('data-status').textContent = `${schedule.length.toLocaleString()} games active (${uniqueDates} dates).`;
+}
+
+
+function installSchedule(next, nextSource) {
+  schedule = next;
+  source = nextSource;
+  populateMonths();
+  updateSource();
+  queueSearch();
+}
+
+
+function buildItineraryText(t) {
+  const firstAir = TEAM[t.path[0].home].airport;
+  const lastAir = TEAM[t.path[t.path.length - 1].home].airport;
+  const lines = [
+    `🏒 NHL FRIENDS ROAD TRIP (${dateRange(t.start, t.end)})`,
+    `Duration: ${t.days} days · ${t.path.length} games · ${t.miles.toFixed(0)} straight-line mi (~${Math.round(t.miles * 1.22)} road mi)`,
+    `Crew Teams Seen (${t.coverage}/${t.requestedTeams.length}): ${t.selectedTeams.map(a => TEAM[a].name).join(', ')}`,
+    `Flights: Fly into ${firstAir} (${TEAM[t.path[0].home].city}) → Fly out of ${lastAir} (${TEAM[t.path[t.path.length - 1].home].city})`,
+    ''
+  ];
+  t.path.forEach((g, i) => {
+    const tr = i ? formatLegTransit(t.path[i - 1].home, g.home, t.legs[i - 1]) : null;
+    lines.push(`Game ${i + 1}: ${dateLabel(g.date, {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'})} (${formatLocalTime(g.localTime, g.home)}) — ${g.away} @ ${g.home}${g.isH2H ? ' 🔥 [HEAD-TO-HEAD]' : ''}`);
+    lines.push(`   📍 ${TEAM[g.home].arena} · ${TEAM[g.home].city}`);
+    lines.push(i ? `   ${tr.mode}: ${tr.time} (${tr.detail} from ${t.path[i - 1].home})` : `   🏁 Meet up in ${TEAM[g.home].city} (${TEAM[g.home].airport})`);
+  });
+  return lines.join('\n');
+}
+
+
+function buildGroupPollText(tripList) {
+  const candidates = tripList.slice(0, 3);
+  if (!candidates.length) return 'No trips available to poll yet.';
+  const emojis = ['1️⃣', '2️⃣', '3️⃣'];
+  const lines = [
+    `🏒 VOTE: WHICH NHL ROAD TRIP ARE WE DOING?`,
+    `Crew Teams: ${[...selected].map(a => `${a} (${TEAM[a].name})`).join(' · ')}`,
+    ''
+  ];
+  candidates.forEach((t, idx) => {
+    const firstAir = TEAM[t.path[0].home].airport;
+    const lastAir = TEAM[t.path[t.path.length - 1].home].airport;
+    lines.push(`${emojis[idx]} OPTION ${String.fromCharCode(65 + idx)}: ${dateRange(t.start, t.end)} (${t.days} days, ${t.path.length} games, ~${Math.round(t.miles * 1.22)} road mi)`);
+    lines.push(`   ✈️ Fly into ${firstAir} → out of ${lastAir}${t.h2hCount ? ` · 🔥 Includes Head-to-Head game!` : ''}`);
+    t.path.forEach(g => {
+      lines.push(`   • ${dateLabel(g.date, {weekday: 'short', month: 'short', day: 'numeric'})}: ${g.away} @ ${g.home} (${TEAM[g.home].city}, ${formatLocalTime(g.localTime, g.home)})`);
+    });
+    lines.push('');
+  });
+  lines.push('Reply with 1️⃣, 2️⃣, or 3️⃣ so we can lock in flights & tickets!');
+  return lines.join('\n');
+}
+
+
+async function copyTextWithModalFallback(text, title, toastMsg) {
+  try {
+    if (!navigator.clipboard || !window.isSecureContext) throw new Error('Clipboard unavailable');
+    await navigator.clipboard.writeText(text);
+    notify(toastMsg);
+  } catch {
+    $('dialog-title').textContent = title;
+    const area = $('copy-text');
+    area.value = text;
+    $('copy-dialog').showModal();
+    area.focus();
+    area.select();
+  }
+}
+
+
+function downloadICS(t) {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//NHL Friends Road Trip Planner Pro//EN',
+    'CALSCALE:GREGORIAN'
+  ];
+  t.path.forEach((g, idx) => {
+    const dClean = g.date.replace(/-/g, '');
+    const [hh, mm] = (g.localTime || '19:00').split(':');
+    const startH = String(Number(hh)).padStart(2, '0');
+    const endH = String(Math.min(23, Number(hh) + 3)).padStart(2, '0');
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:nhl-trip-${g.id}@nhltripplanner.local`,
+      `DTSTART:${dClean}T${startH}${mm}00`,
+      `DTEND:${dClean}T${endH}${mm}00`,
+      `SUMMARY:🏒 NHL Road Trip Game ${idx + 1}: ${g.away} @ ${g.home}`,
+      `LOCATION:${TEAM[g.home].arena}, ${TEAM[g.home].city}`,
+      `DESCRIPTION:${TEAM[g.away].name} at ${TEAM[g.home].name} (${formatLocalTime(g.localTime, g.home)}). Airport: ${TEAM[g.home].airport}`,
+      'END:VEVENT'
+    );
+  });
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], {type: 'text/calendar;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `nhl-road-trip-${t.start}.ics`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  notify('📅 Downloaded .ics calendar file for this road trip!');
+}
+
+
+// Event Listeners
+$('team-search').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  renderTeams();
+});
+
+
+$('division-tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-division]');
+  if (!b) return;
+  division = b.dataset.division;
+  renderTeams();
+});
+
+
+$('team-grid').addEventListener('click', e => {
+  const b = e.target.closest('[data-team]');
+  if (!b) return;
+  const a = b.dataset.team;
+  if (selected.has(a)) {
+    selected.delete(a);
+  } else if (selected.size < 3) {
+    selected.add(a);
+  } else {
+    const oldest = selected.values().next().value;
+    selected.delete(oldest);
+    selected.add(a);
+    notify(`Swapped out ${TEAM[oldest].name} for ${TEAM[a].name} (max 3 teams).`);
+  }
+  renderTeams();
+  queueSearch();
+});
+
+
+$('clear-teams-btn').addEventListener('click', () => {
+  selected.clear();
+  pinnedKeys.clear();
+  renderTeams();
+  queueSearch();
+  notify('Cleared selected teams. Pick up to 3 teams below.');
+});
+
+
+$('selected-teams').addEventListener('click', e => {
+  const b = e.target.closest('[data-remove]');
+  if (b) {
+    selected.delete(b.dataset.remove);
+    renderTeams();
+    queueSearch();
+  }
+});
+
+
+document.querySelectorAll('[data-preset]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const picks = btn.dataset.preset.split(',').map(s => s.trim().toUpperCase()).filter( abbr => TEAM[abbr]);
+    selected = new Set(picks);
+    pinnedKeys.clear();
+    division = 'All';
+    searchQuery = '';
+    $('team-search').value = '';
+    if (mapRegion !== 'AUTO' && mapRegion !== 'ALL') {
+      mapRegion = 'AUTO';
+      document.querySelectorAll('[data-region]').forEach(b => b.setAttribute('aria-pressed', b.dataset.region === 'AUTO' ? 'true' : 'false'));
+    }
+    renderTeams();
+    queueSearch();
+    notify(`Loaded preset: ${picks.map(a => TEAM[a].name).join(' + ')}`);
+  });
+});
+
+
+document.querySelectorAll('[data-region]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-region]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    btn.setAttribute('aria-pressed', 'true');
+    mapRegion = btn.dataset.region;
+    renderArenaMap();
+  });
+});
+
+
+$('arena-map').addEventListener('click', e => {
+  const node = e.target.closest('[data-arena]');
+  if (!node) return;
+  const abbr = node.dataset.arena;
+  if (selected.has(abbr)) {
+    selected.delete(abbr);
+    renderTeams();
+    queueSearch();
+    notify(`Removed ${TEAM[abbr].name}`);
+  } else if (selected.size < 3) {
+    selected.add(abbr);
+    renderTeams();
+    queueSearch();
+    notify(`Added ${TEAM[abbr].name}`);
+  } else {
+    notify(`${TEAM[abbr].name} (${TEAM[abbr].arena}) — remove a team first to select.`);
+  }
+});
+
+
+$('trip-form').addEventListener('submit', e => { e.preventDefault(); queueSearch(); });
+['window', 'month', 'origin', 'dedupe', 'weekend-only', 'sort-select'].forEach(id => $(id).addEventListener('change', queueSearch));
+$('distance').addEventListener('input', () => {
+  $('distance-value').textContent = $('distance').value + ' mi';
+  queueSearch();
+});
+$('coverage').addEventListener('change', () => {
+  $('coverage-text').innerHTML = $('coverage').checked
+    ? 'Must include all selected teams<small>Every friend sees their team at least once.</small>'
+    : 'Match any selected teams (2+ games)<small>More flexibility for the whole crew.</small>';
+  queueSearch();
+});
+
+
+$('results').addEventListener('click', e => {
+  const shareTripBtn = e.target.closest('[data-share-trip]');
+  if (shareTripBtn) {
+    const idx = Number(shareTripBtn.dataset.shareTrip);
+    activeTripIndex = idx;
+    renderResults();
+    const t = trips[idx];
+    const shareUrl = getShareableUrl(idx);
+    openShareModalWithLinks({
+      title: `🔗 Share Road Trip #${idx + 1} (${dateRange(t.start, t.end)})`,
+      text: buildItineraryText(t) + `\n\n🔗 Interactive Route Map & Trip Link:\n${shareUrl}`,
+      subject: `🏒 NHL Road Trip Option: ${dateRange(t.start, t.end)} (${t.selectedTeams.join(' + ')})`,
+      smsText: buildSmsSummaryText([t], shareUrl),
+      shareUrl,
+      toastMsg: '🔗 Direct link to this road trip ready to share!'
+    });
+    return;
+  }
+  const smsTripBtn = e.target.closest('[data-sms-trip]');
+  if (smsTripBtn) {
+    const idx = Number(smsTripBtn.dataset.smsTrip);
+    activeTripIndex = idx;
+    renderResults();
+    const t = trips[idx];
+    const shareUrl = getShareableUrl(idx);
+    const smsBody = buildSmsSummaryText([t], shareUrl);
+    openShareModalWithLinks({
+      title: `💬 Text Road Trip #${idx + 1} (${dateRange(t.start, t.end)})`,
+      text: smsBody,
+      subject: `🏒 NHL Road Trip: ${dateRange(t.start, t.end)}`,
+      smsText: smsBody,
+      shareUrl,
+      toastMsg: '💬 Click "Open in Text / SMS App" to text this trip!'
+    });
+    return;
+  }
+  const emailTripBtn = e.target.closest('[data-email-trip]');
+  if (emailTripBtn) {
+    const idx = Number(emailTripBtn.dataset.emailTrip);
+    activeTripIndex = idx;
+    renderResults();
+    const t = trips[idx];
+    const shareUrl = getShareableUrl(idx);
+    const body = buildItineraryText(t) + `\n\n🔗 Interactive Route Map & Trip Link:\n${shareUrl}`;
+    openShareModalWithLinks({
+      title: `✉️ Email Road Trip #${idx + 1} (${dateRange(t.start, t.end)})`,
+      text: body,
+      subject: `🏒 NHL Road Trip Itinerary: ${dateRange(t.start, t.end)} (${t.selectedTeams.join(' + ')})`,
+      smsText: buildSmsSummaryText([t], shareUrl),
+      shareUrl,
+      toastMsg: '✉️ Click "Open in Default Email App" or "Open in Gmail Web"!'
+    });
+    return;
+  }
+  const copyBtn = e.target.closest('[data-copy]');
+  if (copyBtn) {
+    const idx = Number(copyBtn.dataset.copy);
+    const t = trips[idx];
+    const shareUrl = getShareableUrl(idx);
+    copyTextWithModalFallback(buildItineraryText(t) + `\n\n🔗 Interactive Map & Trip Link:\n${shareUrl}`, 'Your group-chat itinerary', '📋 Itinerary + share link copied to clipboard!');
+    return;
+  }
+  const icsBtn = e.target.closest('[data-ics]');
+  if (icsBtn) {
+    downloadICS(trips[Number(icsBtn.dataset.ics)]);
+    return;
+  }
+  const pinBtn = e.target.closest('[data-pin]');
+  if (pinBtn) {
+    const t = trips[Number(pinBtn.dataset.pin)];
+    if (pinnedKeys.has(t.key)) {
+      pinnedKeys.delete(t.key);
+    } else {
+      if (pinnedKeys.size >= 3) { notify('You can pin up to 3 trips at a time.'); return; }
+      pinnedKeys.add(t.key);
+    }
+    renderResults();
+    return;
+  }
+  const mapBtn = e.target.closest('[data-map-focus]');
+  if (mapBtn) {
+    activeTripIndex = Number(mapBtn.dataset.mapFocus);
+    renderResults();
+    $('arena-map').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    return;
+  }
+  const card = e.target.closest('[data-trip-index]');
+  if (card && !e.target.closest('button')) {
+    activeTripIndex = Number(card.dataset.tripIndex);
+    renderResults();
+  }
+});
+
+
+$('poll-export-btn').addEventListener('click', () => {
+  const pinnedList = trips.filter(t => pinnedKeys.has(t.key));
+  const targetList = pinnedList.length ? pinnedList : trips.slice(0, 3);
+  copyTextWithModalFallback(buildGroupPollText(targetList), 'Group Chat Poll (Top Contenders)', '🗳️ Group chat poll copied to clipboard!');
+});
+
+
+$('copy-pinned-poll').addEventListener('click', () => {
+  const pinnedList = trips.filter(t => pinnedKeys.has(t.key));
+  copyTextWithModalFallback(buildGroupPollText(pinnedList), 'Pinned Trips Poll', '🗳️ Pinned trips poll copied!');
+});
+
+
+$('clear-pins').addEventListener('click', () => {
+  pinnedKeys.clear();
+  renderResults();
+});
+
+
+$('more-results').addEventListener('click', () => { visible += 8; renderResults(); });
+$('close-dialog').addEventListener('click', () => $('copy-dialog').close());
+
+
+function sampleSchedule() {
+  return normalizeSchedule(SAMPLE_ROWS);
+}
+
+
+$('reset-data').addEventListener('click', () => {
+  installSchedule(sampleSchedule(), 'sample');
+  notify('Restored full 1,312-game staggered season.');
+});
+
+
+$('download-data').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({
+    description: 'NHL Friends Road Trip Planner Pro — 1,312-game staggered season schedule',
+    games: SAMPLE_ROWS.map(([date, away, home, localTime]) => ({date, away, home, localTime}))
+  }, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'nhl-staggered-season-schedule.json';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+
+$('schedule-file').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const next = normalizeSchedule(JSON.parse(await file.text()));
+    installSchedule(next, 'custom');
+    notify(`Loaded ${next.length.toLocaleString()} custom games.`);
+  } catch (err) {
+    notify('Import failed: ' + err.message);
+  } finally {
+    e.target.value = '';
+  }
+});
+
+
+$('fetch-club-season').addEventListener('click', async () => {
+  if (!selected.size) { notify('Select at least 1 team first.'); return; }
+  const btn = $('fetch-club-season');
+  btn.disabled = true;
+  btn.textContent = 'Fetching club schedules…';
+  try {
+    const clubs = [...selected];
+    const fetchedGames = [];
+    for (const club of clubs) {
+      const res = await fetch(`https://api-web.nhle.com/v1/club-schedule-season/${club}/now`, {credentials: 'omit'});
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (Array.isArray(data.games)) fetchedGames.push(...data.games);
+    }
+    const next = normalizeSchedule(fetchedGames);
+    installSchedule(next, 'live');
+    notify(`Loaded ${next.length} live games for ${clubs.join(', ')}!`);
+  } catch {
+    notify('Direct browser fetch blocked by NHL CORS policy. Using embedded 1,312-game season (or import JSON).');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚡ Fetch Live Season for Selected Teams';
+  }
+});
+
+
+$('fetch-live').addEventListener('click', async () => {
+  const btn = $('fetch-live');
+  const date = $('live-date').value;
+  btn.disabled = true;
+  btn.textContent = 'Fetching…';
+  try {
+    const res = await fetch('https://api-web.nhle.com/v1/schedule/' + date, {credentials: 'omit'});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const next = normalizeSchedule(await res.json());
+    installSchedule(next, 'live');
+    notify('Live NHL week loaded!');
+  } catch {
+    notify('Direct browser fetch blocked by CORS. Use the API link to save JSON and import it above.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Fetch live week';
+  }
+});
+
+
+
+// ============================================================================
+// MULTI-SPORT & PRO / COLLEGE EXPANSION ENGINE REGISTRY
+// ============================================================================
+const LEAGUE_REGISTRY = {
+  NHL:   { id: 'NHL',   name: 'National Hockey League',     short: 'NHL',   sport: 'Hockey',     level: 'PRO',     icon: '🏒', venueTerm: 'Arena',    eventTerm: 'Puck Drop',   active: true },
+  NFL:   { id: 'NFL',   name: 'National Football League',   short: 'NFL',   sport: 'Football',   level: 'PRO',     icon: '🏈', venueTerm: 'Stadium',  eventTerm: 'Kickoff',     active: false },
+  NBA:   { id: 'NBA',   name: 'National Basketball Assoc.', short: 'NBA',   sport: 'Basketball', level: 'PRO',     icon: '🏀', venueTerm: 'Arena',    eventTerm: 'Tip-Off',     active: false },
+  MLB:   { id: 'MLB',   name: 'Major League Baseball',      short: 'MLB',   sport: 'Baseball',   level: 'PRO',     icon: '⚾', venueTerm: 'Ballpark', eventTerm: 'First Pitch', active: false },
+  MLS:   { id: 'MLS',   name: 'Major League Soccer',        short: 'MLS',   sport: 'Soccer',     level: 'PRO',     icon: '⚽', venueTerm: 'Stadium',  eventTerm: 'Kickoff',     active: false },
+  NCAAF: { id: 'NCAAF', name: 'NCAA Div I Football (FBS)',  short: 'NCAAF', sport: 'Football',   level: 'COLLEGE', icon: '🎓🏈', venueTerm: 'Stadium',  eventTerm: 'Kickoff',     active: false },
+  NCAAB: { id: 'NCAAB', name: 'NCAA Div I Basketball',      short: 'NCAAB', sport: 'Basketball', level: 'COLLEGE', icon: '🎓🏀', venueTerm: 'Arena',    eventTerm: 'Tip-Off',     active: false },
+  NCAAH: { id: 'NCAAH', name: 'NCAA Div I Ice Hockey',      short: 'NCAAH', sport: 'Hockey',     level: 'COLLEGE', icon: '🎓🏒', venueTerm: 'Arena',    eventTerm: 'Puck Drop',   active: false }
+};
+
+// Tag all default NHL teams with league & level metadata for multi-sport extensibility
+TEAMS.forEach(t => {
+  if (!t.league) t.league = 'NHL';
+  if (!t.level) t.level = 'PRO';
+  if (!t.sport) t.sport = 'Hockey';
+});
+
+let activeLeagues = new Set(['NHL']);
+let customLiveBaseUrl = '';
+try {
+  customLiveBaseUrl = localStorage.getItem('nhl_planner_live_url') || '';
+} catch {}
+
+// ============================================================================
+// URL HASH STATE ENCODING & DECODING (FOR INSTANT EMAIL / TEXT LINK SHARING)
+// ============================================================================
+function buildStateHash(overrideTripIndex = null) {
+  const params = new URLSearchParams();
+  if (selected.size) params.set('teams', [...selected].join(','));
+  if ($('window').value !== '3,5') params.set('win', $('window').value);
+  if ($('distance').value !== '350') params.set('leg', $('distance').value);
+  if ($('month').value !== 'all') params.set('mo', $('month').value);
+  if ($('origin').value !== 'any') params.set('hub', $('origin').value);
+  if (!$('coverage').checked) params.set('all', '0');
+  if (!$('dedupe').checked) params.set('dedupe', '0');
+  if ($('weekend-only').checked) params.set('wknd', '1');
+  if ($('sort-select').value !== 'fit') params.set('sort', $('sort-select').value);
+  const mapIdx = overrideTripIndex !== null ? overrideTripIndex : activeTripIndex;
+  if (mapIdx > 0) params.set('map', String(mapIdx));
+  if (pinnedKeys.size) params.set('pins', [...pinnedKeys].join('~'));
+  const str = params.toString();
+  return str ? '#' + str : '';
+}
+
+function getShareableUrl(overrideTripIndex = null) {
+  const hash = buildStateHash(overrideTripIndex);
+  let base = customLiveBaseUrl.trim();
+  if (!base) {
+    const loc = window.location.href.split('#')[0];
+    if (loc.startsWith('http://') || loc.startsWith('https://')) {
+      base = loc;
+    } else {
+      base = 'https://your-username.github.io/nhl-trip-planner/';
+    }
+  }
+  return base.replace(/#.*$/, '') + hash;
+}
+
+function syncUrlHashSilently() {
+  const hash = buildStateHash();
+  try {
+    if (window.location.hash !== hash) {
+      window.history.replaceState(null, '', hash || window.location.pathname + window.location.search);
+    }
+  } catch {}
+}
+
+function applyStateFromHash() {
+  const rawHash = window.location.hash ? window.location.hash.slice(1) : '';
+  if (!rawHash || !rawHash.includes('=')) return false;
+  const params = new URLSearchParams(rawHash);
+  let applied = false;
+
+  if (params.has('teams')) {
+    const picks = params.get('teams').split(',').map(s => s.trim().toUpperCase()).filter(a => TEAM[a]);
+    if (picks.length) {
+      selected = new Set(picks.slice(0, 3));
+      applied = true;
+    }
+  }
+  if (params.has('win')) {
+    const w = params.get('win');
+    if ([...$('window').options].some(o => o.value === w)) {
+      $('window').value = w;
+      applied = true;
+    }
+  }
+  if (params.has('leg')) {
+    const leg = Math.min(600, Math.max(30, Number(params.get('leg')) || 350));
+    $('distance').value = String(leg);
+    $('distance-value').textContent = leg + ' mi';
+    applied = true;
+  }
+  if (params.has('mo')) {
+    const mo = params.get('mo');
+    if ([...$('month').options].some(o => o.value === mo)) {
+      $('month').value = mo;
+      applied = true;
+    }
+  }
+  if (params.has('hub')) {
+    const hub = params.get('hub');
+    if ([...$('origin').options].some(o => o.value === hub)) {
+      $('origin').value = hub;
+      applied = true;
+    }
+  }
+  if (params.has('all')) {
+    $('coverage').checked = params.get('all') !== '0';
+    $('coverage-text').innerHTML = $('coverage').checked
+      ? 'Must include all selected teams<small>Every friend sees their team at least once.</small>'
+      : 'Match any selected teams (2+ games)<small>More flexibility for the whole crew.</small>';
+    applied = true;
+  }
+  if (params.has('dedupe')) {
+    $('dedupe').checked = params.get('dedupe') !== '0';
+    applied = true;
+  }
+  if (params.has('wknd')) {
+    $('weekend-only').checked = params.get('wknd') === '1';
+    applied = true;
+  }
+  if (params.has('sort')) {
+    const s = params.get('sort');
+    if ([...$('sort-select').options].some(o => o.value === s)) {
+      $('sort-select').value = s;
+      applied = true;
+    }
+  }
+  if (params.has('pins')) {
+    const pList = params.get('pins').split('~').filter(Boolean);
+    pinnedKeys = new Set(pList.slice(0, 3));
+    applied = true;
+  }
+  if (params.has('map')) {
+    activeTripIndex = Math.max(0, Number(params.get('map')) || 0);
+    applied = true;
+  }
+  if (applied) {
+    const teamNames = [...selected].map(a => TEAM[a]?.name || a).join(' + ');
+    $('shared-state-msg').textContent = `🔗 Loaded shared road trip configuration (${teamNames || 'Custom Setup'})!`;
+    $('shared-state-banner').hidden = false;
+  }
+  return applied;
+}
+
+// ============================================================================
+// EMAIL (mailto:) & TEXT / SMS (sms:) SHARE HELPERS
+// ============================================================================
+function openShareModalWithLinks({ title, text, subject, smsText, shareUrl, toastMsg }) {
+  const fullText = text.includes(shareUrl) ? text : `${text}\n\n🔗 Interactive Map & Trip Link:\n${shareUrl}`;
+  const cleanSms = (smsText || fullText).includes(shareUrl) ? (smsText || fullText) : `${smsText || fullText}\n\n🔗 Open Interactive Route Map: ${shareUrl}`;
+  const mailSubject = subject || `🏒 NHL Road Trip Shortlist (${[...selected].join(' + ')})`;
+
+  const mailtoHref = `mailto:?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(fullText)}`;
+  const gmailHref = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(fullText)}`;
+  const smsHref = `sms:?&body=${encodeURIComponent(cleanSms)}`;
+
+  $('dialog-title').textContent = title || 'Share & Send Road Trip';
+  $('dialog-mailto-link').href = mailtoHref;
+  $('dialog-gmail-link').href = gmailHref;
+  $('dialog-sms-link').href = smsHref;
+  $('dialog-url-preview').textContent = `Share URL: ${shareUrl.slice(0, 68)}${shareUrl.length > 68 ? '…' : ''}`;
+
+  const area = $('copy-text');
+  area.value = fullText;
+  $('copy-dialog').showModal();
+  if (toastMsg) notify(toastMsg);
+}
+
+function buildSmsSummaryText(tripList, shareUrl) {
+  const top = tripList.slice(0, 2);
+  if (!top.length) {
+    return `🏒 Check out our NHL Road Trip Planner (${[...selected].join(' + ')}):\n${shareUrl}`;
+  }
+  const lines = [`🏒 NHL Road Trip Options (${[...selected].join(' + ')}):`];
+  top.forEach((t, idx) => {
+    const stops = t.path.map(g => `${g.away}@${g.home} (${dateLabel(g.date)})`).join(' → ');
+    lines.push(`${idx + 1}) ${dateRange(t.start, t.end)}: ${stops} (~${Math.round(t.miles * 1.22)} road mi)`);
+  });
+  lines.push(`🔗 Interactive Map & Full Shortlist: ${shareUrl}`);
+  return lines.join('\n');
+}
+
+// ============================================================================
+// WIRE UP NEW SHARE, MULTI-SPORT & GITHUB PAGES CONTROLS
+// ============================================================================
+$('share-link-btn').addEventListener('click', async () => {
+  syncUrlHashSilently();
+  const shareUrl = getShareableUrl();
+  const pinnedList = trips.filter(t => pinnedKeys.has(t.key));
+  const targetList = pinnedList.length ? pinnedList : trips.slice(0, 3);
+  const pollText = buildGroupPollText(targetList);
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(shareUrl);
+    }
+  } catch {}
+  openShareModalWithLinks({
+    title: '🔗 Shareable Trip Link & Poll',
+    text: `🔗 Interactive Road Trip Link (${[...selected].join(' + ')}):\n${shareUrl}\n\n${pollText}`,
+    subject: `🏒 NHL Road Trip Planner — ${[...selected].join(' + ')}`,
+    smsText: buildSmsSummaryText(targetList, shareUrl),
+    shareUrl,
+    toastMsg: '🔗 Shareable trip link ready to copy, text, or email!'
+  });
+});
+
+$('share-sms-btn').addEventListener('click', () => {
+  syncUrlHashSilently();
+  const shareUrl = getShareableUrl();
+  const pinnedList = trips.filter(t => pinnedKeys.has(t.key));
+  const targetList = pinnedList.length ? pinnedList : trips.slice(0, 3);
+  const smsBody = buildSmsSummaryText(targetList, shareUrl);
+  openShareModalWithLinks({
+    title: '💬 Text / SMS Road Trip Shortlist',
+    text: smsBody,
+    subject: `🏒 NHL Road Trip Options (${[...selected].join(' + ')})`,
+    smsText: smsBody,
+    shareUrl,
+    toastMsg: '💬 Click "Open in Text / SMS App" or copy below for iMessage/WhatsApp!'
+  });
+});
+
+$('share-email-btn').addEventListener('click', () => {
+  syncUrlHashSilently();
+  const shareUrl = getShareableUrl();
+  const pinnedList = trips.filter(t => pinnedKeys.has(t.key));
+  const targetList = pinnedList.length ? pinnedList : trips.slice(0, 3);
+  const body = buildGroupPollText(targetList) + `\n\n🔗 Open Interactive Route Map & Filters:\n${shareUrl}`;
+  openShareModalWithLinks({
+    title: '✉️ Email Road Trip Shortlist to Coworker / Crew',
+    text: body,
+    subject: `🏒 NHL Road Trip Shortlist (${[...selected].join(' + ')})`,
+    smsText: buildSmsSummaryText(targetList, shareUrl),
+    shareUrl,
+    toastMsg: '✉️ Click "Open in Default Email App" or "Open in Gmail Web"!'
+  });
+});
+
+$('dialog-copy-btn').addEventListener('click', async () => {
+  const area = $('copy-text');
+  area.focus();
+  area.select();
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(area.value);
+    } else {
+      document.execCommand('copy');
+    }
+    notify('📋 Copied message and shareable link to clipboard!');
+  } catch {
+    notify('Selected text — press Ctrl+C / Cmd+C to copy.');
+  }
+});
+
+$('share-pinned-link').addEventListener('click', async () => {
+  syncUrlHashSilently();
+  const shareUrl = getShareableUrl();
+  const pinnedList = trips.filter(t => pinnedKeys.has(t.key));
+  openShareModalWithLinks({
+    title: '📌 Share Pinned Trips Link',
+    text: buildGroupPollText(pinnedList) + `\n\n🔗 Compare Pinned Trips on Map:\n${shareUrl}`,
+    subject: `📌 Pinned NHL Road Trip Options (${[...selected].join(' + ')})`,
+    smsText: buildSmsSummaryText(pinnedList, shareUrl),
+    shareUrl,
+    toastMsg: '🔗 Pinned trips link ready!'
+  });
+});
+
+$('sms-pinned-poll').addEventListener('click', () => {
+  syncUrlHashSilently();
+  const shareUrl = getShareableUrl();
+  const pinnedList = trips.filter(t => pinnedKeys.has(t.key));
+  const smsBody = buildSmsSummaryText(pinnedList, shareUrl);
+  openShareModalWithLinks({
+    title: '💬 Text Pinned Road Trips',
+    text: smsBody,
+    subject: `📌 Pinned NHL Road Trips (${[...selected].join(' + ')})`,
+    smsText: smsBody,
+    shareUrl,
+    toastMsg: '💬 Ready to text your pinned contenders!'
+  });
+});
+
+$('email-pinned-poll').addEventListener('click', () => {
+  syncUrlHashSilently();
+  const shareUrl = getShareableUrl();
+  const pinnedList = trips.filter(t => pinnedKeys.has(t.key));
+  const body = buildGroupPollText(pinnedList) + `\n\n🔗 Interactive Map & Comparison:\n${shareUrl}`;
+  openShareModalWithLinks({
+    title: '✉️ Email Pinned Road Trips',
+    text: body,
+    subject: `📌 Pinned NHL Road Trip Contenders (${[...selected].join(' + ')})`,
+    smsText: buildSmsSummaryText(pinnedList, shareUrl),
+    shareUrl,
+    toastMsg: '✉️ Ready to email your pinned contenders!'
+  });
+});
+
+$('github-guide-btn').addEventListener('click', () => {
+  $('live-base-url').value = customLiveBaseUrl;
+  $('github-dialog').showModal();
+});
+$('close-github-dialog').addEventListener('click', () => $('github-dialog').close());
+
+$('save-base-url-btn').addEventListener('click', () => {
+  customLiveBaseUrl = $('live-base-url').value.trim();
+  try {
+    if (customLiveBaseUrl) localStorage.setItem('nhl_planner_live_url', customLiveBaseUrl);
+    else localStorage.removeItem('nhl_planner_live_url');
+  } catch {}
+  notify(customLiveBaseUrl ? '✅ Saved your live GitHub Pages share URL!' : 'Cleared custom URL (using current browser address).');
+});
+
+$('multisport-arch-btn').addEventListener('click', () => $('multisport-dialog').showModal());
+$('close-multisport-dialog').addEventListener('click', () => $('multisport-dialog').close());
+
+$('league-selector-bar').addEventListener('click', e => {
+  const btn = e.target.closest('[data-league-select]');
+  if (!btn) return;
+  const lg = btn.dataset.leagueSelect;
+  if (lg === 'NHL') {
+    notify('🏒 NHL (32 arenas, 1,344 games) is active.');
+  } else {
+    const info = LEAGUE_REGISTRY[lg];
+    $('multisport-dialog').showModal();
+    notify(`${info.icon} ${info.name} (${info.level}) slot is pre-wired in the solver schema! See expansion specs or import custom JSON.`);
+  }
+});
+
+$('copy-multisport-template-btn').addEventListener('click', async () => {
+  const sampleMultiSportJson = JSON.stringify({
+    description: "Multi-Sport & Pro/College Crossover Schedule Schema (NHL + NFL + NCAA)",
+    supportedLeagues: Object.keys(LEAGUE_REGISTRY),
+    teams: [
+      { abbr: "MICH", name: "Michigan Wolverines (NCAA FB)", city: "Ann Arbor, MI", arena: "Michigan Stadium", airport: "DTW", tz: "ET", division: "Big Ten (NCAA)", lat: 42.2658, lon: -83.7487, color: "#00274c", league: "NCAAF", level: "COLLEGE", sport: "Football" }
+    ],
+    games: [
+      { league: "NHL", level: "PRO", sport: "Hockey", date: "2026-11-06", away: "PHI", home: "DET", localTime: "7:00 PM" },
+      { league: "NCAAF", level: "COLLEGE", sport: "Football", date: "2026-11-07", away: "DET", home: "MICH", localTime: "12:00 PM", note: "College + Pro Crossover Corridor" },
+      { league: "NHL", level: "PRO", sport: "Hockey", date: "2026-11-08", away: "CBJ", home: "DET", localTime: "7:30 PM" }
+    ]
+  }, null, 2);
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(sampleMultiSportJson);
+      notify('📋 Multi-Sport JSON schema template copied to clipboard!');
+    } else {
+      throw new Error('Fallback');
+    }
+  } catch {
+    $('multisport-dialog').close();
+    copyTextWithModalFallback(sampleMultiSportJson, 'Multi-Sport JSON Schema Template', '📋 Copied!');
+  }
+});
+
+$('copy-current-link-banner').addEventListener('click', () => $('share-link-btn').click());
+$('dismiss-shared-banner').addEventListener('click', () => { $('shared-state-banner').hidden = true; });
+
+// Initialize
+schedule = sampleSchedule();
+source = 'sample';
+populateMonths();
+updateSource();
+applyStateFromHash();
+renderTeams();
+queueSearch();
+
+window.addEventListener('hashchange', () => {
+  if (applyStateFromHash()) {
+    renderTeams();
+    queueSearch();
+  }
+});
+</script>
+</body>
+</html>
