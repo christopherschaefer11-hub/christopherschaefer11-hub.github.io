@@ -1,22 +1,9 @@
-# NHL Friends Road Trip Planner Pro (Multi-Sport Ready)
+# Big 4 Pro Sports Road Trip Planner Pro (NHL · NFL · NBA · MLB)
 
-A 100% self-contained, single-file interactive road trip planner for sports crews. Currently pre-loaded with the full **2026–27 NHL regular-season schedule** across all 32 NHL arenas, with a unified **Multi-Sport & Pro/College (NCAA) Expansion Engine** ready for NFL, NBA, MLB, MLS, NCAA Football, NCAA Basketball, and NCAA Hockey crossover itineraries.
+A 100% self-contained, single-file interactive road trip planner for sports crews, live at `https://christopherschaefer11-hub.github.io/`.
 
-## How to Host for Free on GitHub Pages (3 Minutes)
-
-1. **Create a Free Repository**:
-   - Sign in to GitHub and go to [https://github.com/new](https://github.com/new).
-   - Set **Repository name** to `nhl-trip-planner` (or `sports-trip-planner`).
-   - Select **Public** and click **Create repository**.
-2. **Upload These Files**:
-   - On your new repository page, click **uploading an existing file** (or **Add file → Upload files**).
-   - Drag and drop `index.html`, `.nojekyll`, and `README.md` from this folder into the browser window.
-   - Click the green **Commit changes** button at the bottom.
-3. **Enable GitHub Pages**:
-   - Click **Settings** (top tab bar of your repository) → **Pages** (left sidebar).
-   - Under **Build and deployment → Source**, keep **Deploy from a branch** selected.
-   - Under **Branch**, change `None` to `main` (and `/ (root)`), then click **Save**.
-4. **Share Your Live Link via Email or Text**:
-   - Wait ~60 seconds and refresh the Pages settings screen.
-   - Your permanent live URL will appear: `https://<your-username>.github.io/nhl-trip-planner/`
-   - Inside the app, click **🔗 Share Trip Link**, **💬 Text / SMS**, or **✉️ Email** to send your coworker a link that automatically loads your selected teams, travel radius, pinned trips, and plotted map route!
+## Features
+- **All 4 Major Pro Leagues (124 Teams)**: Toggle instantly between **🏒 NHL (32 Arenas)**, **🏈 NFL (32 Stadiums)**, **🏀 NBA (30 Arenas)**, **⚾ MLB (30 Ballparks)**, and **🔀 Multi-Sport Mix (124 Teams)** with mix-and-match league filter pills.
+- **🏟️ Shared NHL/NBA Arena Recognition**: Automatically detects zero-mile shared venues (such as Madison Square Garden, TD Garden, Wells Fargo Center, United Center, Crypto.com Arena, Little Caesars Arena, Ball Arena, Capital One Arena, Scotiabank Arena, Delta Center, and American Airlines Center).
+- **⚡ Same-Day Doubleheader Solver**: Optional toggle in Step 2 that surfaces 2-game same-day doubleheaders (requires ≥5 hours between start times and venues within 130 miles—including NFL Sunday 1 PM + 8:20 PM SNF, MLB Subway/Crosstown day-night doubleheaders, and NHL/NBA matinee + primetime doubleheaders).
+- **Direct URL State Sharing + Email/SMS**: Encodes active sport mode, mix-and-match leagues, selected teams, filters, doubleheader setting, and pinned trips directly into the URL hash (`#league=COMBO&mix=NHL,NBA&teams=...&dh=1`).
