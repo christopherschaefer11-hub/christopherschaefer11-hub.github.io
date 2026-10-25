@@ -2,8 +2,11 @@
 
 A 100% self-contained, single-file interactive road trip planner for sports crews, live at `https://christopherschaefer11-hub.github.io/`.
 
-## Features
-- **All 4 Major Pro Leagues (124 Teams)**: Toggle instantly between **🏒 NHL (32 Arenas)**, **🏈 NFL (32 Stadiums)**, **🏀 NBA (30 Arenas)**, **⚾ MLB (30 Ballparks)**, and **🔀 Multi-Sport Mix (124 Teams)** with mix-and-match league filter pills.
-- **🏟️ Shared NHL/NBA Arena Recognition**: Automatically detects zero-mile shared venues (such as Madison Square Garden, TD Garden, Wells Fargo Center, United Center, Crypto.com Arena, Little Caesars Arena, Ball Arena, Capital One Arena, Scotiabank Arena, Delta Center, and American Airlines Center).
-- **⚡ Same-Day Doubleheader Solver**: Optional toggle in Step 2 that surfaces 2-game same-day doubleheaders (requires ≥5 hours between start times and venues within 130 miles—including NFL Sunday 1 PM + 8:20 PM SNF, MLB Subway/Crosstown day-night doubleheaders, and NHL/NBA matinee + primetime doubleheaders).
-- **Direct URL State Sharing + Email/SMS**: Encodes active sport mode, mix-and-match leagues, selected teams, filters, doubleheader setting, and pinned trips directly into the URL hash (`#league=COMBO&mix=NHL,NBA&teams=...&dh=1`).
+## What's New in This Release
+- **Upcoming Dates Filter + Past-Date Warning Badges**:
+  - **📅 Upcoming dates only (hide past games)** is enabled by default in Step 2 so the solver only suggests trips starting today or later.
+  - If you uncheck the filter or select a completed month to browse historical stretches, every past trip card and game row displays a prominent **⚠️ Past Date — Trip Already Occurred** warning banner.
+  - Built-in MLB schedule now includes both Late-October 2026 Fall Classic / Sports Equinox crossover games and the full upcoming **2027 MLB Regular Season (April–September 2027)**.
+- **Live Big 4 API & Schedule Tools (NHL · NFL · NBA · MLB)**:
+  - Upgraded the sidebar Schedule Tools panel to fetch live schedules across **all 4 leagues** (NHL, NFL, NBA, and MLB) via CORS-friendly ESPN Scoreboard APIs and the official MLB StatsAPI.
+  - Export or reset any active single-sport or multi-sport schedule JSON.
